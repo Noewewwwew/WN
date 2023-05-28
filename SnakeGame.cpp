@@ -2,14 +2,25 @@
 #include <iostream>
 #include "SnakeGame.h"
 
+using namespace std;
+
 SnakeGame::SnakeGame() {
+    // 뱀 초기화
+    snake.push_back(pos(MAP_SIZE / 2, MAP_SIZE / 2));
+    this->map[MAP_SIZE / 2][MAP_SIZE / 2] = ELEMENT_KIND::SNAKE_HEAD;
+
+    for(int i = 1; i < 4; i++){
+        snake.push_back(pos(MAP_SIZE / 2, MAP_SIZE / 2 + i));
+        this->map[MAP_SIZE / 2][MAP_SIZE / 2 + i] = ELEMENT_KIND::SNAKE_BODY;
+    }
+    
     // map 외곽 초기화(IMMU_WALL)
-    this->map[0][0] = this->map[0][MAP_SIZE - 1] = IMMU_WALL;
-    this->map[MAP_SIZE - 1][0] = this->map[MAP_SIZE - 1][MAP_SIZE - 1] = IMMU_WALL;
+    this->map[0][0] = this->map[0][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
+    this->map[MAP_SIZE - 1][0] = this->map[MAP_SIZE - 1][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
 
     // map 외곽 초기화(WALL)
     for(int i = 1; i < MAP_SIZE - 1; i++){
-        this->map[0][i] = this->map[i][0] = this->map[MAP_SIZE - 1][i] = this->map[i][MAP_SIZE - 1] = WALL;
+        this->map[0][i] = this->map[i][0] = this->map[MAP_SIZE - 1][i] = this->map[i][MAP_SIZE - 1] = ELEMENT_KIND::WALL;
     }
 }
 
@@ -20,16 +31,20 @@ void SnakeGame::init() {
     // CMD 색상 사용
     start_color();
 
+    noecho();
+
+    nodelay(stdscr, TRUE);
+
     // 칸 별 색상 정의
     // 그런데, pair는 1부터 시작할 수 있기 때문에 + 1해서 증가
     // 이제 굳이 board 전체를 순회해서 1로 만들어줄 필요는 없기 때문
-    init_pair(BOARD + 1, COLOR_WHITE, COLOR_WHITE);
+    init_pair(ELEMENT_KIND::BOARD + 1, COLOR_WHITE, COLOR_WHITE);
     
-    init_pair(IMMU_WALL + 1, COLOR_BLUE, COLOR_BLUE);
-    init_pair(WALL + 1, COLOR_CYAN, COLOR_CYAN);
+    init_pair(ELEMENT_KIND::IMMU_WALL + 1, COLOR_BLUE, COLOR_BLUE);
+    init_pair(ELEMENT_KIND::WALL + 1, COLOR_CYAN, COLOR_CYAN);
 
-    init_pair(SNAKE_HEAD + 1, COLOR_GREEN, COLOR_GREEN);
-    init_pair(SNAKE_BODY + 1, COLOR_YELLOW, COLOR_YELLOW);
+    init_pair(ELEMENT_KIND::SNAKE_HEAD + 1, COLOR_GREEN, COLOR_GREEN);
+    init_pair(ELEMENT_KIND::SNAKE_BODY + 1, COLOR_YELLOW, COLOR_YELLOW);
     
     // 화면에 그리기
     this->draw();
@@ -51,4 +66,49 @@ void SnakeGame::draw() {
 
     // ncurses 함수 / 화면 갱신
     refresh();
+}
+
+void SnakeGame::update(){
+    // 뱀 움직임
+    const pos& old_snake_head = this->snake.front();
+
+    const auto& now_direction = dPos[this->snake_direction];
+    const pos new_snake_pos(old_snake_head.Y + now_direction[0], old_snake_head.X + now_direction[1]);
+
+    int& element = getElement(new_snake_pos);
+    switch(element){
+    // 앞으로 이동
+    case ELEMENT_KIND::BOARD:{
+        // 현재 맨 앞에 들어있는 좌표 == 머리의 좌표는 SNAKE::BODY로 변경
+        this->map[old_snake_head.Y][old_snake_head.X] = ELEMENT_KIND::SNAKE_BODY;
+
+        // 새로운 머리의 위치를 맨 앞에 삽입
+        this->snake.push_front(new_snake_pos);
+
+        // 새로운 머리의 위치에 맞게 BOARD->SNAKE_HEAD로 변경 
+        element = ELEMENT_KIND::SNAKE_HEAD;
+        
+        // 현재 꼬리는 ELEMENT_KIND::BOARD로 변경
+        this->map[this->snake.back().Y][this->snake.back().X] = ELEMENT_KIND::BOARD;
+        
+        // 꼬리 제거(한칸 이동이니까)
+        this->snake.pop_back();
+        break;
+    }
+
+    case ELEMENT_KIND::GROWTH_ITEM:
+    case ELEMENT_KIND::POISON_ITEM:
+        break;
+
+    case ELEMENT_KIND::PORTAL:
+        break;
+
+    case ELEMENT_KIND::SNAKE_BODY:
+    case ELEMENT_KIND::IMMU_WALL:
+    case ELEMENT_KIND::WALL:
+        this->gameStatus = GAME_STATUS::LOSE;
+        break;
+    }
+
+    draw();
 }
