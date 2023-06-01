@@ -9,7 +9,7 @@ SnakeGame::SnakeGame() {
     snake.push_back(pos(MAP_SIZE / 2, MAP_SIZE / 2));
     this->map[MAP_SIZE / 2][MAP_SIZE / 2] = ELEMENT_KIND::SNAKE_HEAD;
 
-    for(int i = 1; i < 4; i++){
+    for(int i = 1; i < 3; i++){
         snake.push_back(pos(MAP_SIZE / 2, MAP_SIZE / 2 + i));
         this->map[MAP_SIZE / 2][MAP_SIZE / 2 + i] = ELEMENT_KIND::SNAKE_BODY;
     }
