@@ -1,9 +1,10 @@
 #pragma once
 
-//item appear percentage
-const int ITEM_APPEAR_PROBABILITY = 30;  
 #include <deque>
 #include <iostream>
+
+//item appear percentage
+const int ITEM_APPEAR_PROBABILITY = 30;  
 
 //map size
 #define MAP_SIZE 31
