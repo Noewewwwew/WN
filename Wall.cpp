@@ -3,13 +3,12 @@
 
 #include "Wall.h"
 
-Wall::Wall(int map_size): remain_length(0) {
-    // 기본 테두리
-    for(int i = 1; i < map_size - 1; i++){
-        wall.push_back(pos(0, i));
-        wall.push_back(pos(map_size - 1, i));
-        wall.push_back(pos(i, 0));
-        wall.push_back(pos(i, map_size - 1));
+Wall::Wall(int map_size, int stage): remain_length(0) {
+    for(int row = 0; row < map_size; row++){
+        for(int col = 0; col < map_size; col++){
+            if((Wall::stage[stage - 1][row] >> col) & 1)
+                this->wall.push_back(pos(row, map_size - col - 1));
+        }
     }
 }
 
@@ -47,3 +46,122 @@ void Wall::update_remain_length() {
     if(!isUsed()) return;
     remain_length -= 1;
 }
+
+
+int Wall::stage[5][31] = {
+    { 
+      HORIZONTAL_WALL,
+      BLANK_WALL, BLANK_WALL, BLANK_WALL, BLANK_WALL, BLANK_WALL,
+      BLANK_WALL, BLANK_WALL, BLANK_WALL, BLANK_WALL, BLANK_WALL,
+      BLANK_WALL, BLANK_WALL, BLANK_WALL, BLANK_WALL, BLANK_WALL,
+      BLANK_WALL, BLANK_WALL, BLANK_WALL, BLANK_WALL, BLANK_WALL,
+      BLANK_WALL, BLANK_WALL, BLANK_WALL, BLANK_WALL, BLANK_WALL,
+      BLANK_WALL, BLANK_WALL, BLANK_WALL, BLANK_WALL,
+      HORIZONTAL_WALL
+    },
+
+    { 
+      HORIZONTAL_WALL,
+      BLANK_WALL, BLANK_WALL, BLANK_WALL,
+      BLANK_WALL | 134103024,
+      BLANK_WALL, BLANK_WALL, BLANK_WALL,
+      BLANK_WALL | 134103024,
+      BLANK_WALL, BLANK_WALL, BLANK_WALL,
+      BLANK_WALL | 134103024, 
+      BLANK_WALL, BLANK_WALL, BLANK_WALL, BLANK_WALL, BLANK_WALL, 
+      BLANK_WALL | 134103024, 
+      BLANK_WALL, BLANK_WALL, BLANK_WALL, 
+      BLANK_WALL | 134103024, 
+      BLANK_WALL, BLANK_WALL, BLANK_WALL, 
+      BLANK_WALL | 134103024, 
+      BLANK_WALL, BLANK_WALL, BLANK_WALL,
+      HORIZONTAL_WALL
+    },
+
+    { 
+      HORIZONTAL_WALL,
+      BLANK_WALL, BLANK_WALL, 
+      BLANK_WALL | 1281766169, 
+      BLANK_WALL | 1281766169, 
+      BLANK_WALL, BLANK_WALL, BLANK_WALL,
+      BLANK_WALL | 1281766169, 
+      BLANK_WALL | 1281766169,
+      BLANK_WALL, BLANK_WALL, 
+      BLANK_WALL | 1281766169, 
+      BLANK_WALL | 1281766169, 
+      BLANK_WALL, BLANK_WALL, BLANK_WALL,
+      BLANK_WALL | 1281766169,
+      BLANK_WALL | 1281766169,
+      BLANK_WALL, BLANK_WALL,
+      BLANK_WALL | 1281766169,
+      BLANK_WALL | 1281766169,
+      BLANK_WALL, BLANK_WALL, BLANK_WALL,
+      BLANK_WALL | 1281766169, BLANK_WALL | 1281766169,
+      BLANK_WALL, BLANK_WALL,
+      HORIZONTAL_WALL
+    },
+
+    { 
+      HORIZONTAL_WALL,
+      BLANK_WALL, BLANK_WALL, BLANK_WALL, 
+      BLANK_WALL | 1207959537, 
+      BLANK_WALL | 1073741841, 
+      BLANK_WALL | 1073741841, 
+      BLANK_WALL | 1073741841, 
+      BLANK_WALL | 1149235473, 
+      BLANK_WALL | 1145045265, 
+      BLANK_WALL | 1145045265, 
+      BLANK_WALL | 1145045265, 
+      BLANK_WALL | 1145569041, 
+      BLANK_WALL | 1145307409, 
+      BLANK_WALL | 1145307409, 
+      BLANK_WALL | 1145311505, 
+      BLANK_WALL | 1145049361, 
+      BLANK_WALL | 1145049361, 
+      BLANK_WALL | 1149235473, 
+      BLANK_WALL | 1145045265, 
+      BLANK_WALL | 1145045265, 
+      BLANK_WALL | 1145045265, 
+      BLANK_WALL | 1145569041, 
+      BLANK_WALL | 1140850689,
+      BLANK_WALL | 1140850689, 
+      BLANK_WALL | 1140850689, 
+      BLANK_WALL | 1207959537, 
+      BLANK_WALL, BLANK_WALL, BLANK_WALL,
+      HORIZONTAL_WALL
+    },
+
+    { 
+      HORIZONTAL_WALL,
+      BLANK_WALL, 
+      BLANK_WALL | 1590031549,
+      BLANK_WALL | 1357190433,
+      BLANK_WALL | 1352996385,
+      BLANK_WALL | 1451577405,
+      BLANK_WALL | 1117066785,
+      BLANK_WALL | 1117590817,
+      BLANK_WALL | 1586304189,
+      BLANK_WALL, 
+      BLANK_WALL | 1609695005,
+      BLANK_WALL | 1609695005,
+      BLANK_WALL | 1609695005,
+      BLANK_WALL | 1550958621,
+      BLANK_WALL | 1550960413,
+      BLANK_WALL | 1550960413,
+      BLANK_WALL | 1550960413,
+      BLANK_WALL | 1543620381,
+      BLANK_WALL | 1551878141,
+      BLANK_WALL | 1551878141,
+      BLANK_WALL | 1551878141,
+      BLANK_WALL, 
+      BLANK_WALL | 1606320317, 
+      BLANK_WALL | 1352843681, 
+      BLANK_WALL | 1344438433, 
+      BLANK_WALL | 1403691709, 
+      BLANK_WALL | 1377992865, 
+      BLANK_WALL | 1352834209, 
+      BLANK_WALL | 1604487357, 
+      BLANK_WALL,
+      HORIZONTAL_WALL
+    },
+};
