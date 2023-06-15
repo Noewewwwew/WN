@@ -54,10 +54,10 @@ class SnakeGame {
     // 게임 상태는 게임 중
     int gameStatus = GAME_STATUS::GAMING;
   
-    static const int NUM_ITEMS = 10;
+    const int NUM_ITEMS = 3;
   
     // Function to find a random empty space on the map
-    pos findRandomEmptySpace(int map[MAP_SIZE][MAP_SIZE]);
+    pos findRandomEmptySpace();
 
     Snake snake;
 
@@ -132,6 +132,5 @@ public:
     // item arange
     void createItems();
     void removeExpiredItems();
-    void handleItem(const pos& position, int element);
     int getItem(const pos& position);
 };

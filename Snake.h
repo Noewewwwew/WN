@@ -31,7 +31,10 @@ public:
     Snake(const int& y, const int& x);
     const pos& head();
     const pos new_head();
+    
+    // portal 용
     void move_head(const pos new_pos);
+    
     const pos& tail();
     
     void set_head_direction(int direction);
@@ -40,6 +43,8 @@ public:
     int get_snake_length();
     
     void grow();
+
+    // portal 용
     void grow(const pos new_pos);
 
     void shrink();

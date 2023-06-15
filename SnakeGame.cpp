@@ -48,6 +48,9 @@ void SnakeGame::init() {
     init_pair(ELEMENT_KIND::SNAKE_BODY + 1, COLOR_YELLOW, COLOR_YELLOW);
 
     init_pair(ELEMENT_KIND::PORTAL + 1, COLOR_MAGENTA, COLOR_MAGENTA);
+
+    init_pair(ELEMENT_KIND::GROWTH_ITEM + 1, COLOR_GREEN, COLOR_GREEN);
+    init_pair(ELEMENT_KIND::POISON_ITEM + 1, COLOR_RED, COLOR_RED);
     
     // 화면에 그리기
     this->draw();
@@ -160,7 +163,6 @@ void SnakeGame::mapupdate(){
 }
 
 void SnakeGame::update(){
-    // 새로운 머리 좌표에 해당하는 map의 값을 가져옴
     if(this->wall.isUsed()) this->wall.update_remain_length();
 
     switch(this->getElement(this->snake.new_head())){
@@ -185,7 +187,25 @@ void SnakeGame::update(){
         break;
 
     case ELEMENT_KIND::GROWTH_ITEM:
+        this->setElement(this->snake.head(), ELEMENT_KIND::SNAKE_BODY);
+        this->snake.grow();
+        this->setElement(this->snake.head(), ELEMENT_KIND::SNAKE_HEAD);
+        break;
+
     case ELEMENT_KIND::POISON_ITEM:
+        this->setElement(this->snake.head(), ELEMENT_KIND::SNAKE_BODY);
+        
+        // 현재 꼬리는 ELEMENT_KIND::BOARD로 변경하고, 
+        this->setElement(this->snake.tail(), ELEMENT_KIND::BOARD);
+        this->snake.shrink();
+
+        this->snake.grow();
+        this->setElement(this->snake.head(), ELEMENT_KIND::SNAKE_HEAD);
+
+        this->setElement(this->snake.tail(), ELEMENT_KIND::BOARD);
+        this->snake.shrink();
+
+        if(snake.get_snake_length() < 3) this->setGameStatus(GAME_STATUS::LOSE); 
         break;
 
     case ELEMENT_KIND::PORTAL:{
@@ -223,13 +243,12 @@ void SnakeGame::update(){
     case ELEMENT_KIND::SNAKE_BODY:
     case ELEMENT_KIND::IMMU_WALL:
     case ELEMENT_KIND::WALL:
-        this->gameStatus = GAME_STATUS::LOSE;
+        this->setGameStatus(GAME_STATUS::LOSE);
         break;
     }
 
     draw();
 }
-
 
 void SnakeGame::createItems() {
     // random 공간에 아이템 지정하기 (growth, poison)
@@ -237,7 +256,7 @@ void SnakeGame::createItems() {
         pos itemPosition;
         do {
             // map에서 빈 공간 중 random 으로 하나 지정 
-            itemPosition = findRandomEmptySpace(map);
+            itemPosition = findRandomEmptySpace();
         } while (itemPosition.X == -1 || itemPosition.Y == -1); // 빈 공간이 없으면 다시 시도 -> 빈 공간 찾을때 까지 
 
         // 아이템 종류 지정
@@ -248,40 +267,23 @@ void SnakeGame::createItems() {
     }
 }
 
-
 void SnakeGame::removeExpiredItems() {
     // 시간이 만료된 아이템 지우기
     for (int i = 1; i < MAP_SIZE - 1; i++) {
         for (int j = 1; j < MAP_SIZE - 1; j++) {
-            if (map[i][j] == ELEMENT_KIND::GROWTH_ITEM || map[i][j] == ELEMENT_KIND::POISON_ITEM) {
-                map[i][j] = ELEMENT_KIND::BOARD;
+            if (this->map[i][j] == ELEMENT_KIND::GROWTH_ITEM || map[i][j] == ELEMENT_KIND::POISON_ITEM) {
+                this->map[i][j] = ELEMENT_KIND::BOARD;
             }
-        }
-    }
-}
-
-void SnakeGame::handleItem(const pos& position, int element) {
-    // 아이템 기능 (+1, -1)
-    if (element == ELEMENT_KIND::GROWTH_ITEM) {
-        //growth아이템을 먹으면 길이 1 추가
-        snake.push_back(position);
-    }
-    else if (element == ELEMENT_KIND::POISON_ITEM) {
-        // poison아이템이면 길이 1 단축
-        if (snake.size() > 1) {
-            map[snake.front().Y][snake.front().X] = ELEMENT_KIND::BOARD;
-            snake.pop_front();
         }
     }
 }
 
 int SnakeGame::getItem(const pos& position) {
     //아이템 고정 자리에서 출현
-    return map[position.Y][position.X];
+    return this->map[position.Y][position.X];
 }
 
-
-pos SnakeGame::findRandomEmptySpace(int map[MAP_SIZE][MAP_SIZE]) {
+pos SnakeGame::findRandomEmptySpace() {
     pos emptySpace = {-1, -1};
 
     //임의의 시작점을 찾고 random으로 출현
@@ -292,7 +294,7 @@ pos SnakeGame::findRandomEmptySpace(int map[MAP_SIZE][MAP_SIZE]) {
         int x = (startX + i) % (MAP_SIZE - 2) + 1;
         for (int j = 0; j < MAP_SIZE - 2; j++) {
             int y = (startY + j) % (MAP_SIZE - 2) + 1;
-            if (map[y][x] == ELEMENT_KIND::BOARD) {
+            if (this->map[y][x] == ELEMENT_KIND::BOARD) {
                 emptySpace = {y, x};
                 return emptySpace;
             }
