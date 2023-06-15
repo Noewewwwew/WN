@@ -9,6 +9,12 @@ using namespace std::chrono;
 auto getTime() {
     return steady_clock::now();
 }
+auto geteeime() {
+    return steady_clock::now();
+}
+auto stagechangetime(const time_point<steady_clock>& start) {
+    return duration_cast<milliseconds>(geteeime() - start).count();
+}
 
 auto milliInterval(const time_point<steady_clock>& start) {
     return duration_cast<milliseconds>(getTime() - start).count();
@@ -22,9 +28,10 @@ int main() {
     
     // 올바른 입력이 아니면 재대기 하는 느낌으로다가 만들어야 함
     // 300ms 마다 화면은 업데이트 되어야 함
-
+    
     time_point start = getTime();
-    while(game->isGaming()){
+    time_point stttt = geteeime();
+    while(!game->isLose()){
         switch (getch()){
         case 'w':
             game->setDirection(SNAKE_HEAD_DIRECTION::UP);
@@ -48,6 +55,11 @@ int main() {
         if(milliInterval(start) >= TIMEOUT){
             game->update();
             start = getTime();
+        }
+        if(stagechangetime(stttt) == 1000){
+            game->changemap();
+            game->update();
+            stttt = geteeime();
         }
     }
 
