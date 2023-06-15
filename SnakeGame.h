@@ -1,5 +1,6 @@
 #include <deque>
 #include <iostream>
+#include <ncurses/ncurses.h>
 
 #include "Snake.h"
 #include "Wall.h"
@@ -15,8 +16,13 @@ const int ITEM_APPEAR_PROBABILITY = 30;
 // Score Board 사이즈
 #define BOARD_SIZE 20
 
-// 타임아웃 시간
+// 타임아웃 시간: 0.3초
 #define UPDATE_DURATION 300
+
+// 아이템 갱신 시간: 8초
+#define ITEM_DURATION 8000
+
+#define CHANGE_DURATION 2000
 
 // 벽 갱신 시간: 15초
 #define PORTAL_DURATION 15000
@@ -45,6 +51,17 @@ namespace ELEMENT_KIND {
     const int SCOREBOARD = 8;
 };
 
+struct MissionCnt {
+    int maxSnakeLength, gate, poisonItem, growthItem;
+
+    MissionCnt(int maxSnakeLength = 0, int growthItem = 0, int poisonItem = 0, int gate = 0) {
+        this->maxSnakeLength = maxSnakeLength;
+        this->growthItem = growthItem;
+        this->poisonItem = poisonItem;
+        this->gate = gate;
+    }
+};
+
 class SnakeGame {
     // 맵 데이터
     int map[MAP_SIZE][MAP_SIZE];
@@ -61,6 +78,13 @@ class SnakeGame {
 
     Snake snake;
 
+    WINDOW* scoreBoard;
+    WINDOW* missionBoard;
+    WINDOW* gameBoard;
+    WINDOW* noticeText;
+
+    MissionCnt totalCnt, currCnt;
+
 public:
     Wall wall;
 
@@ -68,17 +92,14 @@ public:
     SnakeGame();
 
     // 게임 상태 get, set 메서드
-    int CurrentStage;
-    int B; // Current lengrh / Max length
-    int GI; // Growth Item
-    int PI; // Poison Item
-    int G; // Gate 사용 횟수
-    int mission[5][4] = { // B, GI, PI, G  // 이후 미션 조정
-        {6,1,1,1},
-        {7,2,2,2},
-        {8,3,3,3},
-        {9,4,4,4},
-        {10,5,5,5}
+    int currStage;
+
+    const MissionCnt mission[5] = {
+        MissionCnt(6, 2, 4, 1),
+        MissionCnt(7, 3, 3, 2),
+        MissionCnt(8, 4, 2, 3),
+        MissionCnt(9, 5, 1, 4),
+        MissionCnt(10, 6, 0, 5),
     };
     
     int getGameStatus() { return this->gameStatus; }
@@ -103,15 +124,16 @@ public:
     void update();
     
     // 스테이지 변경
-    void changemap();
+    void changeMap();
 
     // 맵 업데이트(5단계)
-    void mapupdate();
+    void mapUpate();
 
-    // Score Board
-    void ScoreBoard();
+    void changeNoticeMessage(const char* msg);
 
     void changePortal();
+
+    bool isMissionClear();
 
     int& getElement(const int& y, const int& x){
         // 잘못된 맵 접근
