@@ -121,25 +121,25 @@ void SnakeGame::update(){
 }
 
 void SnakeGame::createItems() {
-    // Generate new items at random positions
+    // random 공간에 아이템 지정하기 (growth, poison)
     for (int i = 0; i < NUM_ITEMS; i++) {
         pos itemPosition;
         do {
-            // Find a random empty space on the map
+            // map에서 빈 공간 중 random 으로 하나 지정 
             itemPosition = findRandomEmptySpace(map);
-        } while (itemPosition.X == -1 || itemPosition.Y == -1); // Retry if no empty space is found
+        } while (itemPosition.X == -1 || itemPosition.Y == -1); // 빈 공간이 없으면 다시 시도 -> 빈 공간 찾을때 까지 
 
-        // Determine item type
+        // 아이템 종류 지정
         int itemType = (rand() % 2 == 0) ? ELEMENT_KIND::GROWTH_ITEM : ELEMENT_KIND::POISON_ITEM;
 
-        // Set item on the map
+        //아이템 map에 지정
         map[itemPosition.Y][itemPosition.X] = itemType;
     }
 }
 
 
 void SnakeGame::removeExpiredItems() {
-    // Remove expired items from the map
+    // 시간이 만료된 아이템 지우기
     for (int i = 1; i < MAP_SIZE - 1; i++) {
         for (int j = 1; j < MAP_SIZE - 1; j++) {
             if (map[i][j] == ELEMENT_KIND::GROWTH_ITEM || map[i][j] == ELEMENT_KIND::POISON_ITEM) {
@@ -150,13 +150,13 @@ void SnakeGame::removeExpiredItems() {
 }
 
 void SnakeGame::handleItem(const pos& position, int element) {
-    // Handle the effect of an item
+    // 아이템 기능 (+1, -1)
     if (element == ELEMENT_KIND::GROWTH_ITEM) {
-        // If it's a growth item, extend the snake by 1 unit
+        //growth아이템을 먹으면 길이 1 추가
         snake.push_back(position);
     }
     else if (element == ELEMENT_KIND::POISON_ITEM) {
-        // If it's a poison item, shrink the snake by 1 unit
+        // poison아이템이면 길이 1 단축
         if (snake.size() > 1) {
             map[snake.front().Y][snake.front().X] = ELEMENT_KIND::BOARD;
             snake.pop_front();
@@ -165,7 +165,7 @@ void SnakeGame::handleItem(const pos& position, int element) {
 }
 
 int SnakeGame::getItem(const pos& position) {
-    // Get the item at the given position
+    //아이템 고정 자리에서 출현
     return map[position.Y][position.X];
 }
 
@@ -173,7 +173,7 @@ int SnakeGame::getItem(const pos& position) {
 pos SnakeGame::findRandomEmptySpace(int map[MAP_SIZE][MAP_SIZE]) {
     pos emptySpace = {-1, -1};
 
-    // Randomly choose a starting position and find an empty space
+    //임의의 시작점을 찾고 random으로 출현
     int startX = rand() % (MAP_SIZE - 2) + 1;
     int startY = rand() % (MAP_SIZE - 2) + 1;
 
