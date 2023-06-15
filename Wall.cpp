@@ -6,6 +6,11 @@
 Wall::Wall(int map_size, int stage): remain_length(0) {
     for(int row = 0; row < map_size; row++){
         for(int col = 0; col < map_size; col++){
+            if(row == 0 && col == 0) continue;
+            if(row == 0 && col == map_size - 1) continue;
+            if(row == map_size - 1 && col == 0) continue;
+            if(row == map_size - 1 && col == map_size - 1) continue;
+            
             if((Wall::stage[stage - 1][row] >> col) & 1)
                 this->wall.push_back(pos(row, map_size - col - 1));
         }
@@ -46,7 +51,6 @@ void Wall::update_remain_length() {
     if(!isUsed()) return;
     remain_length -= 1;
 }
-
 
 int Wall::stage[5][31] = {
     { 

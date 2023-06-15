@@ -1,7 +1,7 @@
 #include <ncurses/ncurses.h>
 #include <iostream>
-#include <windows.h>
 #include <memory.h>
+
 #include "SnakeGame.h"
 
 #define DEBUG false
@@ -10,36 +10,28 @@ using namespace std;
 
 SnakeGame::SnakeGame(): snake(1, MAP_SIZE / 2), wall(MAP_SIZE, 1) {
     // 시작 상태 초기화(스테이지, 아이템)
-    CurrentStage = 1;
-    B = GI = PI = G = 0;
-     
-    mapupdate();
-}
+    currStage = 1;
+    totalCnt = MissionCnt();
+    currCnt = MissionCnt();
 
-void SnakeGame::ScoreBoard(){
-     for(int i = 0 ; i < 20 ; i ++){
-          for(int j = 0 ; i < 20 ; j++){
-               this->board[33 + i][1 + i]  = ELEMENT_KIND::SCOREBOARD;
-          }
-     }
+    mapUpate();
 }
 
 void SnakeGame::init() {
     // Screen 초기화
     initscr();
-
+    
     // CMD 색상 사용
     start_color();
 
     noecho();
 
     nodelay(stdscr, TRUE);
-
+    
     // 칸 별 색상 정의
     // 그런데, pair는 1부터 시작할 수 있기 때문에 + 1해서 증가
     // 이제 굳이 board 전체를 순회해서 1로 만들어줄 필요는 없기 때문
     init_pair(ELEMENT_KIND::BOARD + 1, COLOR_WHITE, COLOR_WHITE);
-    init_pair(ELEMENT_KIND::SCOREBOARD + 1, COLOR_MAGENTA, COLOR_MAGENTA);
     
     init_pair(ELEMENT_KIND::IMMU_WALL + 1, COLOR_BLUE, COLOR_BLUE);
     init_pair(ELEMENT_KIND::WALL + 1, COLOR_CYAN, COLOR_CYAN);
@@ -51,7 +43,16 @@ void SnakeGame::init() {
 
     init_pair(ELEMENT_KIND::GROWTH_ITEM + 1, COLOR_GREEN, COLOR_GREEN);
     init_pair(ELEMENT_KIND::POISON_ITEM + 1, COLOR_RED, COLOR_RED);
+    init_pair(ELEMENT_KIND::REVERSE_ITEM + 1, COLOR_BLACK, COLOR_BLACK);
+
+    init_pair(10, COLOR_RED, COLOR_WHITE);
     
+    this->scoreBoard = newwin(12, 20, 5, 72);
+    this->missionBoard = newwin(12, 20, 17, 72);
+    this->gameBoard = newwin(31, 62, 5, 10);
+    this->noticeText = newwin(1, 70, 3, 15);
+    mvwprintw(this->noticeText, 0, 29, "Game Start!");
+
     // 화면에 그리기
     this->draw();
 }
@@ -63,15 +64,35 @@ void SnakeGame::draw() {
         for(int j = 0; j < MAP_SIZE * 2; j += 2){
             // 2칸씩 좌표를 건너뛰지만, map의 길이는 MAP_SIZE 만큼이기 때문에
             // j / 2 를 해서 올바른 접근을 하게 함
-            attron(COLOR_PAIR(this->map[i][j / 2] + 1));
+            wattr_on(this->gameBoard, COLOR_PAIR(this->map[i][j / 2] + 1), NULL);
 
             // 반각문자이기 때문에 공백 2칸 출력
-            mvprintw(i, j, DEBUG ? "a " : "  ");
+            mvwprintw(this->gameBoard, i, j, DEBUG ? "a " : "  ");
         }
     }
 
+    box(this->scoreBoard, 0, 0);
+    box(this->missionBoard, 0, 0);
+    
+    mvwprintw(this->scoreBoard, 1, 7, "Score");
+    mvwprintw(this->missionBoard, 1, 7, "Mission");
+
+    mvwprintw(this->scoreBoard, 3, 5, " B : %d / %d", this->snake.get_snake_length(), this->totalCnt.maxSnakeLength);
+    mvwprintw(this->scoreBoard, 5, 5, "GI : %d", this->totalCnt.growthItem);
+    mvwprintw(this->scoreBoard, 7, 5, "PI : %d", this->totalCnt.poisonItem);
+    mvwprintw(this->scoreBoard, 9, 5, " G : %d", this->totalCnt.gate);
+
+    mvwprintw(this->missionBoard, 3, 5, " B : %d / %d", this->snake.get_snake_length(), this->mission[this->currStage - 1].maxSnakeLength);
+    mvwprintw(this->missionBoard, 5, 5, "GI : %d / %d", this->currCnt.growthItem, this->mission[this->currStage - 1].growthItem);
+    mvwprintw(this->missionBoard, 7, 5, "PI : %d / 0", -this->mission[this->currStage - 1].poisonItem + this->currCnt.poisonItem);
+    mvwprintw(this->missionBoard, 9, 5, " G : %d / %d", this->currCnt.gate, this->mission[this->currStage - 1].gate);
+    
+    wrefresh(this->noticeText);
+    wrefresh(this->scoreBoard);
+    wrefresh(this->missionBoard);
+
     // ncurses 함수 / 화면 갱신
-    refresh();
+    wrefresh(this->gameBoard);
 }
 
 void SnakeGame::changePortal() {
@@ -83,83 +104,99 @@ void SnakeGame::changePortal() {
     setElement(this->wall.getPortal2(), ELEMENT_KIND::PORTAL);
 }
 
-void SnakeGame::changemap(){
+void SnakeGame::changeMap(){
      // 게임 상태 업데이트 작업
      // 미션 달성 체크 및 스테이지 변경 로직 구현
      // 스테이지 넘어가는 로직
-     CurrentStage++;
-     SnakeGame::mapupdate(); // 맵 업데이트 호출
+     currStage++;
+     SnakeGame::mapUpate(); // 맵 업데이트 호출
      // 다음 스테이지 초기화 작업 등을 수행
 }
 
-void SnakeGame::mapupdate(){
-     if(CurrentStage == 6){
-          this->setGameStatus(GAME_STATUS::WIN);
-          return;
-     }
+bool SnakeGame::isMissionClear(){
+    bool ret = this->snake.get_snake_length() >= this->mission[this->currStage - 1].maxSnakeLength;
+    ret &= this->currCnt.growthItem >= this->mission[this->currStage - 1].growthItem;
+    ret &= this->currCnt.poisonItem <= this->mission[this->currStage - 1].poisonItem;
+    ret &= this->currCnt.gate >= this->mission[this->currStage - 1].gate;
+    
+    return ret;
+}
 
-     // map 초기화
-     memset(map, ELEMENT_KIND::BOARD, sizeof(map));
+void SnakeGame::changeNoticeMessage(const char* msg){
+    mvwprintw(this->noticeText, 0, 0, "                                                                      ");
+    mvwprintw(this->noticeText, 0, 17, msg);
+}
 
-     this->snake = Snake(1, MAP_SIZE / 2);
+void SnakeGame::mapUpate(){
+    if(currStage == 6){
+        this->setGameStatus(GAME_STATUS::WIN);
+        return;
+    }
 
-     // Snake 시작 위치 초기화
-     this->map[1][MAP_SIZE / 2] = ELEMENT_KIND::SNAKE_HEAD;
+    this->currCnt = MissionCnt();
 
-     for(int i = 1; i < 4; i++){
-          this->map[1][MAP_SIZE / 2 + i] = ELEMENT_KIND::SNAKE_BODY;
-     }
+    // map 초기화
+    memset(map, ELEMENT_KIND::BOARD, sizeof(map));
 
-     this->wall = Wall(MAP_SIZE, CurrentStage);
+    this->snake = Snake(1, MAP_SIZE / 2);
 
-     // map 외곽 초기화(WALL)
-     for(pos p: this->wall.get_wall_info())
-          setElement(p, ELEMENT_KIND::WALL);
-     
-     this->wall.initPortal();
-     setElement(this->wall.getPortal1(), ELEMENT_KIND::PORTAL);
-     setElement(this->wall.getPortal2(), ELEMENT_KIND::PORTAL);
+    // Snake 시작 위치 초기화
+    this->map[1][MAP_SIZE / 2] = ELEMENT_KIND::SNAKE_HEAD;
 
-     // map 외곽 초기화(IMMU_WALL)
-     this->map[0][0] = this->map[0][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
-     this->map[MAP_SIZE - 1][0] = this->map[MAP_SIZE - 1][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
-     if(CurrentStage == 5){
-          for(int i = 11; i < 20; i++){
-               this->map[i][3] = ELEMENT_KIND::IMMU_WALL;
-          }
+    for(int i = 1; i < 4; i++){
+        this->map[1][MAP_SIZE / 2 + i] = ELEMENT_KIND::SNAKE_BODY;
+    }
 
-          for(int i = 3; i < 10; i++){
-               this->map[11][i] = ELEMENT_KIND::IMMU_WALL;
-          }
+    this->wall = Wall(MAP_SIZE, currStage);
 
-          for(int i = 11; i < 15; i++){
-               this->map[i][9] = ELEMENT_KIND::IMMU_WALL;
-          }
+    // map 외곽 초기화(WALL)
+    for(pos p: this->wall.get_wall_info())
+        setElement(p, ELEMENT_KIND::WALL);
+    
+    this->wall.initPortal();
+    setElement(this->wall.getPortal1(), ELEMENT_KIND::PORTAL);
+    setElement(this->wall.getPortal2(), ELEMENT_KIND::PORTAL);
 
-          for(int i = 9; i < 16; i++){
-               this->map[19][i] = ELEMENT_KIND::IMMU_WALL;
-          }
+    // map 외곽 초기화(IMMU_WALL)
+    this->map[0][0] = this->map[0][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
+    this->map[MAP_SIZE - 1][0] = this->map[MAP_SIZE - 1][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
+    if(currStage == 5){
+        for(int i = 11; i < 20; i++){
+            this->map[i][3] = ELEMENT_KIND::IMMU_WALL;
+        }
 
-          for(int i = 11; i < 19; i++){
-               this->map[i][15] = ELEMENT_KIND::IMMU_WALL;
-          }
+        for(int i = 3; i < 10; i++){
+            this->map[11][i] = ELEMENT_KIND::IMMU_WALL;
+        }
 
-          for(int i = 15; i < 22; i++){
-               this->map[11][i] = ELEMENT_KIND::IMMU_WALL;
-          }
+        for(int i = 11; i < 15; i++){
+            this->map[i][9] = ELEMENT_KIND::IMMU_WALL;
+        }
 
-          for(int i = 15; i < 19; i++){
-               this->map[i][21] = ELEMENT_KIND::IMMU_WALL;
-          }
+        for(int i = 9; i < 16; i++){
+            this->map[19][i] = ELEMENT_KIND::IMMU_WALL;
+        }
 
-          for(int i = 21; i < 28; i++){
-               this->map[19][i] = ELEMENT_KIND::IMMU_WALL;
-          }
+        for(int i = 11; i < 19; i++){
+            this->map[i][15] = ELEMENT_KIND::IMMU_WALL;
+        }
 
-          for(int i = 11; i < 19; i++){
-               this->map[i][27] = ELEMENT_KIND::IMMU_WALL;
-          }
-     }
+        for(int i = 15; i < 22; i++){
+            this->map[11][i] = ELEMENT_KIND::IMMU_WALL;
+        }
+
+        for(int i = 15; i < 19; i++){
+            this->map[i][21] = ELEMENT_KIND::IMMU_WALL;
+        }
+
+        for(int i = 21; i < 28; i++){
+            this->map[19][i] = ELEMENT_KIND::IMMU_WALL;
+        }
+
+        for(int i = 11; i < 19; i++){
+            this->map[i][27] = ELEMENT_KIND::IMMU_WALL;
+        }
+    }
 }
 
 void SnakeGame::update(){
@@ -187,12 +224,20 @@ void SnakeGame::update(){
         break;
 
     case ELEMENT_KIND::GROWTH_ITEM:
+        this->changeNoticeMessage("Eat Growth Item!, Snake Length + 1 ");
+        this->totalCnt.growthItem += 1; 
+        this->currCnt.growthItem += 1; 
         this->setElement(this->snake.head(), ELEMENT_KIND::SNAKE_BODY);
         this->snake.grow();
         this->setElement(this->snake.head(), ELEMENT_KIND::SNAKE_HEAD);
+        
+        this->totalCnt.maxSnakeLength = max(this->totalCnt.maxSnakeLength, this->snake.get_snake_length());
         break;
 
     case ELEMENT_KIND::POISON_ITEM:
+        this->changeNoticeMessage("Eat Poison Item..., Snake Length - 1");
+        this->totalCnt.poisonItem += 1; 
+        this->currCnt.poisonItem += 1; 
         this->setElement(this->snake.head(), ELEMENT_KIND::SNAKE_BODY);
         
         // 현재 꼬리는 ELEMENT_KIND::BOARD로 변경하고, 
@@ -208,7 +253,21 @@ void SnakeGame::update(){
         if(snake.get_snake_length() < 3) this->setGameStatus(GAME_STATUS::LOSE); 
         break;
 
+    case ELEMENT_KIND::REVERSE_ITEM:
+        this->setElement(this->snake.new_head(), ELEMENT_KIND::BOARD);
+
+        this->changeNoticeMessage("Snake Reversed!");
+        this->setElement(this->snake.tail(), ELEMENT_KIND::SNAKE_HEAD);
+        this->setElement(this->snake.head(), ELEMENT_KIND::SNAKE_BODY);
+        this->snake.set_head_direction((this->snake.get_head_direction() + 2) % 4);
+        this->snake.reverse();
+
+        break;
+
     case ELEMENT_KIND::PORTAL:{
+        this->changeNoticeMessage("             Teleport!              ");
+        this->totalCnt.gate += 1; 
+        this->currCnt.gate += 1; 
         this->wall.setUsed(this->snake.get_snake_length());
 
         const pos& exit = this->snake.new_head() != this->wall.getPortal1() ? this->wall.getPortal1() : this->wall.getPortal2();
@@ -240,6 +299,7 @@ void SnakeGame::update(){
         update();
         return;
     }
+    
     case ELEMENT_KIND::SNAKE_BODY:
     case ELEMENT_KIND::IMMU_WALL:
     case ELEMENT_KIND::WALL:
@@ -251,6 +311,7 @@ void SnakeGame::update(){
 }
 
 void SnakeGame::createItems() {
+    srand(time(NULL));
     // random 공간에 아이템 지정하기 (growth, poison)
     for (int i = 0; i < NUM_ITEMS; i++) {
         pos itemPosition;
@@ -260,7 +321,8 @@ void SnakeGame::createItems() {
         } while (itemPosition.X == -1 || itemPosition.Y == -1); // 빈 공간이 없으면 다시 시도 -> 빈 공간 찾을때 까지 
 
         // 아이템 종류 지정
-        int itemType = (rand() % 2 == 0) ? ELEMENT_KIND::GROWTH_ITEM : ELEMENT_KIND::POISON_ITEM;
+        int rNum = rand() % 3;
+        int itemType = (rNum == 0) ? ELEMENT_KIND::GROWTH_ITEM : (rNum == 1) ? ELEMENT_KIND::POISON_ITEM : ELEMENT_KIND::REVERSE_ITEM;
 
         //아이템 map에 지정
         map[itemPosition.Y][itemPosition.X] = itemType;
@@ -271,7 +333,7 @@ void SnakeGame::removeExpiredItems() {
     // 시간이 만료된 아이템 지우기
     for (int i = 1; i < MAP_SIZE - 1; i++) {
         for (int j = 1; j < MAP_SIZE - 1; j++) {
-            if (this->map[i][j] == ELEMENT_KIND::GROWTH_ITEM || map[i][j] == ELEMENT_KIND::POISON_ITEM) {
+            if (this->map[i][j] >= ELEMENT_KIND::GROWTH_ITEM) {
                 this->map[i][j] = ELEMENT_KIND::BOARD;
             }
         }

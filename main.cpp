@@ -1,19 +1,15 @@
-#include "SnakeGame.h"
 #include <ncurses/ncurses.h>
 #include <iostream>
 #include <chrono>
+
+#include "SnakeGame.h"
+
 
 using namespace std;
 using namespace std::chrono;
 
 auto getTime() {
     return steady_clock::now();
-}
-auto geteeime() {
-    return steady_clock::now();
-}
-auto stagechangetime(const time_point<steady_clock>& start) {
-    return duration_cast<milliseconds>(geteeime() - start).count();
 }
 
 auto milliInterval(const time_point<steady_clock>& start) {
@@ -26,14 +22,39 @@ int main() {
     game->init();
     char c;
     
-    // 올바른 입력이 아니면 재대기 하는 느낌으로다가 만들어야 함
-    // 300ms 마다 화면은 업데이트 되어야 함
-    time_point start = getTime(), portalTime = getTime(), itemTime = getTime();
-    time_point stttt = geteeime();
-    
+    time_point startTime = getTime(), portalTime = getTime(), itemTime = getTime();
+    time_point changeTime = getTime();
+    bool flag = false;
+
     game->createItems();
+    game->draw();
 
     while(game->isGaming()){
+        if(!game->wall.isUsed() && game->isMissionClear()){
+            if(!flag) {
+                flag = true;
+                changeTime = getTime();
+            }
+            
+            auto calcTime = milliInterval(changeTime);
+            if(calcTime < 3000){
+                char msg[50];
+                snprintf(msg, sizeof(msg), "change %d stage to %d stage after %lld sec...", game->currStage, game->currStage + 1, 3LL - (calcTime / 1000));
+                game->changeNoticeMessage(msg);
+            } else {
+                flag = false;
+                startTime = portalTime = itemTime = getTime();
+                game->changeMap();
+
+                game->removeExpiredItems();
+                game->createItems();
+
+                game->changeNoticeMessage("start new stage!");
+
+                game->update();
+            }
+        }
+
         switch (getch()){
         case 'w':
             game->setDirection(SNAKE_HEAD_DIRECTION::UP);
@@ -59,22 +80,16 @@ int main() {
             portalTime = getTime();
         }
         
-        if(milliInterval(itemTime) >= 8000){
+        if(milliInterval(itemTime) >= ITEM_DURATION){
             game->removeExpiredItems();
             game->createItems();
             itemTime = getTime();
         }
 
-        if(milliInterval(start) >= UPDATE_DURATION){
+        if(milliInterval(startTime) >= UPDATE_DURATION){
             game->update();
-            start = getTime();
+            startTime = getTime();
         }
-
-        // if(stagechangetime(stttt) == 1000){
-        //     game->changemap();
-        //     game->update();
-        //     stttt = geteeime();
-        // }
     }
 
     if(game->isLose()) cout << "You Lose";

@@ -47,3 +47,7 @@ void Snake::move_head(const pos new_pos){
 int Snake::get_snake_length(){
     return this->snake.size();
 }
+
+void Snake::reverse(){
+    deque<pos>(this->snake.rbegin(), this->snake.rend()).swap(this->snake); 
+}
