@@ -8,17 +8,6 @@
 using namespace std;
 
 SnakeGame::SnakeGame(): snake(MAP_SIZE / 2, MAP_SIZE / 2), wall(MAP_SIZE) {
-    // 뱀 초기화
-    this->map[MAP_SIZE / 2][MAP_SIZE / 2] = ELEMENT_KIND::SNAKE_HEAD;
-
-    for(int i = 1; i < 3; i++){
-        this->map[MAP_SIZE / 2][MAP_SIZE / 2 + i] = ELEMENT_KIND::SNAKE_BODY;
-    }
-    
-    // map 외곽 초기화(IMMU_WALL)
-    this->map[0][0] = this->map[0][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
-    this->map[MAP_SIZE - 1][0] = this->map[MAP_SIZE - 1][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
-
     // map 외곽 초기화(WALL)
     for(pos p: this->wall.get_wall_info())
         setElement(p, ELEMENT_KIND::WALL);
@@ -41,8 +30,6 @@ void SnakeGame::ScoreBoard(){
           }
      }
 }
-
-
 
 void SnakeGame::init() {
     // Screen 초기화
@@ -113,22 +100,15 @@ void SnakeGame::mapupdate(){
      switch(CurrentStage){
           case 1:
                // Snake 시작 위치 초기화
-               snake.push_back(pos(MAP_SIZE / 2, MAP_SIZE / 2));
                this->map[MAP_SIZE / 2][MAP_SIZE / 2] = ELEMENT_KIND::SNAKE_HEAD;
 
                for(int i = 1; i < 4; i++){
-                    snake.push_back(pos(MAP_SIZE / 2, MAP_SIZE / 2 + i));
                     this->map[MAP_SIZE / 2][MAP_SIZE / 2 + i] = ELEMENT_KIND::SNAKE_BODY;
                }
                
                // map 외곽 초기화(IMMU_WALL)
                this->map[0][0] = this->map[0][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
                this->map[MAP_SIZE - 1][0] = this->map[MAP_SIZE - 1][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
-
-               // map 외곽 초기화(WALL)
-               for(int i = 1; i < MAP_SIZE - 1; i++){
-                    this->map[0][i] = this->map[i][0] = this->map[MAP_SIZE - 1][i] = this->map[i][MAP_SIZE - 1] = ELEMENT_KIND::WALL;
-               }
 
           break;
 
@@ -139,15 +119,13 @@ void SnakeGame::mapupdate(){
                          this->map[i][j] = ELEMENT_KIND::BOARD;
                     }
                }
-               // Snake 제거
-               snake.clear();
 
-               // Snake 시작 위치 초기화
-               snake.push_back(pos(MAP_SIZE / 2, MAP_SIZE / 2));
+               // snake 초기화
+               this->snake = Snake(MAP_SIZE / 2, MAP_SIZE / 2);
+
                this->map[MAP_SIZE / 2][MAP_SIZE / 2] = ELEMENT_KIND::SNAKE_HEAD;
 
                for(int i = 1; i < 4; i++){
-                    snake.push_back(pos(MAP_SIZE / 2, MAP_SIZE / 2 + i));
                     this->map[MAP_SIZE / 2][MAP_SIZE / 2 + i] = ELEMENT_KIND::SNAKE_BODY;
                }
 
@@ -176,15 +154,13 @@ void SnakeGame::mapupdate(){
                          this->map[i][j] = ELEMENT_KIND::BOARD;
                     }
                }
-               // Snake 제거
-               snake.clear();
+               // snake 초기화
+               this->snake = Snake(MAP_SIZE / 2, MAP_SIZE / 2);
 
                // Snake 시작 위치 초기화
-               snake.push_back(pos(MAP_SIZE / 2, MAP_SIZE / 2));
                this->map[MAP_SIZE / 2][MAP_SIZE / 2] = ELEMENT_KIND::SNAKE_HEAD;
 
                for(int i = 1; i < 4; i++){
-                    snake.push_back(pos(MAP_SIZE / 2, MAP_SIZE / 2 + i));
                     this->map[MAP_SIZE / 2][MAP_SIZE / 2 + i] = ELEMENT_KIND::SNAKE_BODY;
                }
 
@@ -235,21 +211,18 @@ void SnakeGame::mapupdate(){
                     }
                }
 
-               // Snake 제거
-               snake.clear();
+               // snake 초기화
+               this->snake = Snake(1, 15);
 
-               // Snake 시작 위치 초기화
-               SnakeGame::snake.push_back(pos(1, 15));
-               map[1][15] = ELEMENT_KIND::SNAKE_HEAD;
+               this->map[1][15] = ELEMENT_KIND::SNAKE_HEAD;
 
                for(int i = 1; i < 3; i++){
-                    snake.push_back(pos(1, 15 + i));
-                    map[1][15 + i] = ELEMENT_KIND::SNAKE_BODY;
+                    this->map[1][15 + i] = ELEMENT_KIND::SNAKE_BODY;
                }
 
                // map 외곽 초기화(WALL)
-               map[0][0] =  map[0][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
-               map[MAP_SIZE - 1][0] =  map[MAP_SIZE - 1][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
+               this->map[0][0] = this->map[0][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
+               this->map[MAP_SIZE - 1][0] = this->map[MAP_SIZE - 1][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
 
                // map 외곽 초기화(WALL)
                for(int i = 1; i < MAP_SIZE - 1; i++){
@@ -290,14 +263,13 @@ void SnakeGame::mapupdate(){
                          this->map[i][j] = ELEMENT_KIND::BOARD;
                     }
                }
-               // Snake 제거
-               snake.clear();
 
-               SnakeGame::snake.push_back(pos(1, 15));
+               // snake 초기화
+               this->snake = Snake(1, 15);
+
                map[1][15] = ELEMENT_KIND::SNAKE_HEAD;
 
                for(int i = 1; i < 3; i++){
-                    snake.push_back(pos(1, 15 + i));
                     map[1][15 + i] = ELEMENT_KIND::SNAKE_BODY;
                }
                
