@@ -6,6 +6,9 @@
 
 using namespace std;
 
+//item appear percentage
+const int ITEM_APPEAR_PROBABILITY = 30;  
+
 // 맵 사이즈
 #define MAP_SIZE 31
 
@@ -49,6 +52,11 @@ class SnakeGame {
     // 게임 상태는 게임 중
     int gameStatus = GAME_STATUS::GAMING;
 
+    static const int NUM_ITEMS = 10;
+  
+    // Function to find a random empty space on the map
+    pos findRandomEmptySpace(int map[MAP_SIZE][MAP_SIZE]);
+  
     Snake snake;
 
 public:
@@ -75,7 +83,6 @@ public:
     void setGameStatus(int gameStatus) {
         this->gameStatus = gameStatus;
     }
-
 
     // 게임 상태가 GAMING, LOSE, WIN 인지 각각 반환
     bool isGaming() { return getGameStatus() == GAME_STATUS::GAMING; }
@@ -119,4 +126,10 @@ public:
         if(_pos.Y < 0 || _pos.Y >= MAP_SIZE || _pos.X < 0 || _pos.X >= MAP_SIZE) throw;
         this->map[_pos.Y][_pos.X] = value;
     }
+  
+    // item arange
+    void createItems();
+    void removeExpiredItems();
+    void handleItem(const pos& position, int element);
+    int getItem(const pos& position);
 };

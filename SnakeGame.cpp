@@ -445,3 +445,73 @@ void SnakeGame::update(){
     draw();
 }
 
+void SnakeGame::createItems() {
+    // random 공간에 아이템 지정하기 (growth, poison)
+    for (int i = 0; i < NUM_ITEMS; i++) {
+        pos itemPosition;
+        do {
+            // map에서 빈 공간 중 random 으로 하나 지정 
+            itemPosition = findRandomEmptySpace(map);
+        } while (itemPosition.X == -1 || itemPosition.Y == -1); // 빈 공간이 없으면 다시 시도 -> 빈 공간 찾을때 까지 
+
+        // 아이템 종류 지정
+        int itemType = (rand() % 2 == 0) ? ELEMENT_KIND::GROWTH_ITEM : ELEMENT_KIND::POISON_ITEM;
+
+        //아이템 map에 지정
+        map[itemPosition.Y][itemPosition.X] = itemType;
+    }
+}
+
+
+void SnakeGame::removeExpiredItems() {
+    // 시간이 만료된 아이템 지우기
+    for (int i = 1; i < MAP_SIZE - 1; i++) {
+        for (int j = 1; j < MAP_SIZE - 1; j++) {
+            if (map[i][j] == ELEMENT_KIND::GROWTH_ITEM || map[i][j] == ELEMENT_KIND::POISON_ITEM) {
+                map[i][j] = ELEMENT_KIND::BOARD;
+            }
+        }
+    }
+}
+
+void SnakeGame::handleItem(const pos& position, int element) {
+    // 아이템 기능 (+1, -1)
+    if (element == ELEMENT_KIND::GROWTH_ITEM) {
+        //growth아이템을 먹으면 길이 1 추가
+        snake.push_back(position);
+    }
+    else if (element == ELEMENT_KIND::POISON_ITEM) {
+        // poison아이템이면 길이 1 단축
+        if (snake.size() > 1) {
+            map[snake.front().Y][snake.front().X] = ELEMENT_KIND::BOARD;
+            snake.pop_front();
+        }
+    }
+}
+
+int SnakeGame::getItem(const pos& position) {
+    //아이템 고정 자리에서 출현
+    return map[position.Y][position.X];
+}
+
+
+pos SnakeGame::findRandomEmptySpace(int map[MAP_SIZE][MAP_SIZE]) {
+    pos emptySpace = {-1, -1};
+
+    //임의의 시작점을 찾고 random으로 출현
+    int startX = rand() % (MAP_SIZE - 2) + 1;
+    int startY = rand() % (MAP_SIZE - 2) + 1;
+
+    for (int i = 0; i < MAP_SIZE - 2; i++) {
+        int x = (startX + i) % (MAP_SIZE - 2) + 1;
+        for (int j = 0; j < MAP_SIZE - 2; j++) {
+            int y = (startY + j) % (MAP_SIZE - 2) + 1;
+            if (map[y][x] == ELEMENT_KIND::BOARD) {
+                emptySpace = {y, x};
+                return emptySpace;
+            }
+        }
+    }
+
+    return emptySpace;
+}
