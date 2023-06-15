@@ -190,13 +190,3 @@ pos SnakeGame::findRandomEmptySpace(int map[MAP_SIZE][MAP_SIZE]) {
 
     return emptySpace;
 }
-
-int main() {
-    srand(time(NULL));
-
-    SnakeGame game;
-    game.play();
-
-    return 0;
-}
-
