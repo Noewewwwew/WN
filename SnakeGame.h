@@ -14,7 +14,9 @@ using namespace std;
 
 // 타임아웃 시간
 #define UPDATE_DURATION 300
-#define PORTAL_DURATION 5000
+
+// 벽 갱신 시간: 15초
+#define PORTAL_DURATION 15000
 
 // pair를 사용할 때 first는 Y, second는 X
 #define Y first
@@ -75,7 +77,6 @@ public:
     void setGameStatus(int gameStatus) {
         this->gameStatus = gameStatus;
     }
-
 
     // 게임 상태가 GAMING, LOSE, WIN 인지 각각 반환
     bool isGaming() { return getGameStatus() == GAME_STATUS::GAMING; }
