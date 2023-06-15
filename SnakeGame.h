@@ -1,12 +1,17 @@
 #include <deque>
 #include <iostream>
+
+#include "Snake.h"
+#include "Wall.h"
+
 using namespace std;
 
 // 맵 사이즈
 #define MAP_SIZE 21
 
 // 타임아웃 시간
-#define TIMEOUT 300
+#define UPDATE_DURATION 300
+#define PORTAL_DURATION 5000
 
 // pair를 사용할 때 first는 Y, second는 X
 #define Y first
@@ -31,24 +36,6 @@ namespace ELEMENT_KIND {
     const int POISON_ITEM = 7;
 };
 
-// SNAKE 머리 방향
-namespace SNAKE_HEAD_DIRECTION {
-    const int LEFT = 0;
-    const int UP = 1;
-    const int RIGHT = 2;
-    const int DOWN = 3;
-};
-
-// snake 의 머리와 몸통에 대한 정보
-typedef std::pair<int, int> pos;
-
-const int dPos[4][2] = {
-    {0, -1}, 
-    {-1, 0}, 
-    {0, 1}, 
-    {1, 0}
-};
-
 class SnakeGame {
     // 맵 데이터
     int map[MAP_SIZE][MAP_SIZE];
@@ -56,13 +43,11 @@ class SnakeGame {
     // 게임 상태는 게임 중
     int gameStatus = GAME_STATUS::GAMING;
 
-    // snake
-    deque<pos> snake;
-
-    // 뱀 머리 방향
-    int snake_direction = SNAKE_HEAD_DIRECTION::LEFT;
+    Snake snake;
 
 public:
+    Wall wall;
+
     // 생성자
     SnakeGame();
     
@@ -77,7 +62,7 @@ public:
     bool isLose() { return getGameStatus() == GAME_STATUS::LOSE; }
     bool isWin() { return getGameStatus() == GAME_STATUS::WIN; }
 
-    void setDirection(int direction) { this->snake_direction = direction; }
+    void setDirection(int direction) { this->snake.set_head_direction(direction); }
 
     // 초기화
     void init();
@@ -88,6 +73,8 @@ public:
     // 뱀 움직임(2단계) / 아이템 등장(3단계) / 포탈 등장(4단계) 등등 연산
     void update();
 
+    void changePortal();
+
     int& getElement(const int& y, const int& x){
         // 잘못된 맵 접근
         if(y < 0 || y >= MAP_SIZE || x < 0 || x >= MAP_SIZE) throw;
@@ -97,5 +84,10 @@ public:
     int& getElement(const pos& _pos){
         if(_pos.Y < 0 || _pos.Y >= MAP_SIZE || _pos.X < 0 || _pos.X >= MAP_SIZE) throw;
         return this->map[_pos.Y][_pos.X];
+    }
+
+    void setElement(const pos& _pos, const int& value){
+        if(_pos.Y < 0 || _pos.Y >= MAP_SIZE || _pos.X < 0 || _pos.X >= MAP_SIZE) throw;
+        this->map[_pos.Y][_pos.X] = value;
     }
 };
