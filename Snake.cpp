@@ -4,6 +4,7 @@ Snake::Snake(const int& y, const int& x): direction(SNAKE_HEAD_DIRECTION::LEFT) 
     this->snake.push_back(pos(y, x));
     this->snake.push_back(pos(y, x + 1));
     this->snake.push_back(pos(y, x + 2));
+    this->snake.push_back(pos(y, x + 3));
 }
 
 void Snake::set_head_direction(int direction){
