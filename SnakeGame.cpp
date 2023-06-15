@@ -1,4 +1,4 @@
-#include <ncurses/ncurses.h>
+#include <ncurses.h>
 #include <iostream>
 #include <ctime>
 #include <cstdlib>
@@ -8,46 +8,114 @@
 using namespace std;
 
 SnakeGame::SnakeGame() {
-    init();
-}
+    // 뱀 초기화
+    snake.push_back(pos(MAP_SIZE / 2, MAP_SIZE / 2));
+    this->map[MAP_SIZE / 2][MAP_SIZE / 2] = ELEMENT_KIND::SNAKE_HEAD;
 
-void generateMap(int map[MAP_SIZE][MAP_SIZE]) {
-    // Generate a border around the map
-    for (int i = 0; i < MAP_SIZE; i++) {
-        for (int j = 0; j < MAP_SIZE; j++) {
-            if (i == 0 || i == MAP_SIZE - 1 || j == 0 || j == MAP_SIZE - 1) {
-                map[i][j] = ELEMENT_KIND::WALL;
-            }
-            else {
-                map[i][j] = ELEMENT_KIND::BOARD;
-            }
-        }
+    for(int i = 1; i < 3; i++){
+        snake.push_back(pos(MAP_SIZE / 2, MAP_SIZE / 2 + i));
+        this->map[MAP_SIZE / 2][MAP_SIZE / 2 + i] = ELEMENT_KIND::SNAKE_BODY;
     }
-}
- 
-pos findValidPortalPosition(int map[MAP_SIZE][MAP_SIZE]) {
-    pos portalPosition;
-    // Find a valid position for the portal
-    do {
-        portalPosition = {rand() % (MAP_SIZE - 2) + 1, rand() % (MAP_SIZE - 2) + 1};
-    } while (map[portalPosition.Y][portalPosition.X] != ELEMENT_KIND::BOARD);
-
-    return portalPosition;
+    
+    // map 외곽 초기화(IMMU_WALL)
+    this->map[0][0] = this->map[0][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
+    this->map[MAP_SIZE - 1][0] = this->map[MAP_SIZE - 1][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
+    // map 외곽 초기화(WALL)
+    for(int i = 1; i < MAP_SIZE - 1; i++){
+        this->map[0][i] = this->map[i][0] = this->map[MAP_SIZE - 1][i] = this->map[i][MAP_SIZE - 1] = ELEMENT_KIND::WALL;
+    }
 }
 
 void SnakeGame::init() {
-    // Initialize the map
-    generateMap(this->map);
+    // Screen 초기화
+    initscr();
+    // CMD 색상 사용
+    start_color();
+    noecho();
+    nodelay(stdscr, TRUE);
+    // 칸 별 색상 정의
+    // 그런데, pair는 1부터 시작할 수 있기 때문에 + 1해서 증가
+    // 이제 굳이 board 전체를 순회해서 1로 만들어줄 필요는 없기 때문
+    init_pair(ELEMENT_KIND::BOARD + 1, COLOR_WHITE, COLOR_WHITE);
+    
+    init_pair(ELEMENT_KIND::IMMU_WALL + 1, COLOR_BLUE, COLOR_BLUE);
+    init_pair(ELEMENT_KIND::WALL + 1, COLOR_CYAN, COLOR_CYAN);
+    init_pair(ELEMENT_KIND::SNAKE_HEAD + 1, COLOR_GREEN, COLOR_GREEN);
+    init_pair(ELEMENT_KIND::SNAKE_BODY + 1, COLOR_YELLOW, COLOR_YELLOW);
+    
+    // 화면에 그리기
+    this->draw();
 
-    // Initialize the snake
-    this->snake.clear();
-    int snakeStartX = MAP_SIZE / 2;
-    int snakeStartY = MAP_SIZE / 2;
-    this->snake.push_back({snakeStartY, snakeStartX});
-    this->map[snakeStartY][snakeStartX] = ELEMENT_KIND::SNAKE_HEAD;
-
-    // Create initial items
     createItems();
+}
+
+void SnakeGame::draw() {
+    // 반각문자를 출력하기 때문에
+    // 가로의 좌표를 출력할 때는 2칸씩 건너뛰어야 함
+    for(int i = 0; i < MAP_SIZE; i++){
+        for(int j = 0; j < MAP_SIZE * 2; j += 2){
+            // 2칸씩 좌표를 건너뛰지만, map의 길이는 MAP_SIZE 만큼이기 때문에
+            // j / 2 를 해서 올바른 접근을 하게 함
+            attron(COLOR_PAIR(this->map[i][j / 2] + 1));
+            // 반각문자이기 때문에 공백 2칸 출력
+            mvprintw(i, j, "  ");
+        }
+    }
+    // ncurses 함수 / 화면 갱신
+
+    for (int i = 0; i < MAP_SIZE; i++) {
+        for (int j = 0; j < MAP_SIZE; j++) {
+            switch (map[i][j]) {
+    case ELEMENT_KIND::GROWTH_ITEM:
+                    // Print a growth item character for growth items
+                    printw("+");
+                    break;
+                case ELEMENT_KIND::POISON_ITEM:
+                    // Print a poison item character for poison items
+                    printw("-");
+                    break;
+                default:
+                    break;}
+        }
+    refresh();
+}
+}
+
+void SnakeGame::update(){
+    // 뱀 움직임
+    const pos& old_snake_head = this->snake.front();
+    const auto& now_direction = dPos[this->snake_direction];
+    const pos new_snake_pos(old_snake_head.Y + now_direction[0], old_snake_head.X + now_direction[1]);
+    int& element = getElement(new_snake_pos);
+    switch(element){
+    // 앞으로 이동
+    case ELEMENT_KIND::BOARD:{
+        // 현재 맨 앞에 들어있는 좌표 == 머리의 좌표는 SNAKE::BODY로 변경
+        this->map[old_snake_head.Y][old_snake_head.X] = ELEMENT_KIND::SNAKE_BODY;
+        // 새로운 머리의 위치를 맨 앞에 삽입
+        this->snake.push_front(new_snake_pos);
+        // 새로운 머리의 위치에 맞게 BOARD->SNAKE_HEAD로 변경 
+        element = ELEMENT_KIND::SNAKE_HEAD;
+        
+        // 현재 꼬리는 ELEMENT_KIND::BOARD로 변경
+        this->map[this->snake.back().Y][this->snake.back().X] = ELEMENT_KIND::BOARD;
+        
+        // 꼬리 제거(한칸 이동이니까)
+        this->snake.pop_back();
+        break;
+    }
+    case ELEMENT_KIND::GROWTH_ITEM:
+    case ELEMENT_KIND::POISON_ITEM:
+        break;
+    case ELEMENT_KIND::PORTAL:
+        break;
+    case ELEMENT_KIND::SNAKE_BODY:
+    case ELEMENT_KIND::IMMU_WALL:
+    case ELEMENT_KIND::WALL:
+        this->gameStatus = GAME_STATUS::LOSE;
+        break;
+    }
+    draw();
 }
 
 void SnakeGame::createItems() {
@@ -99,123 +167,6 @@ int SnakeGame::getItem(const pos& position) {
     return map[position.Y][position.X];
 }
 
-void SnakeGame::draw() {
-    // Clear the screen
-    clear();
-
-    // Draw the map
-    for (int i = 0; i < MAP_SIZE; i++) {
-        for (int j = 0; j < MAP_SIZE; j++) {
-            switch (map[i][j]) {
-                case ELEMENT_KIND::BOARD:
-                    // Print a blank space for the board
-                    printw(" ");
-                    break;
-                case ELEMENT_KIND::IMMU_WALL:
-                case ELEMENT_KIND::WALL:
-                    // Print a wall character for walls
-                    printw("#");
-                    break;
-                case ELEMENT_KIND::PORTAL:
-                    // Print a portal character for the portal
-                    printw("@");
-                    break;
-                case ELEMENT_KIND::SNAKE_HEAD:
-                    // Print the snake head character for the snake head
-                    printw("O");
-                    break;
-                case ELEMENT_KIND::SNAKE_BODY:
-                    // Print the snake body character for the snake body
-                    printw("o");
-                    break;
-                case ELEMENT_KIND::GROWTH_ITEM:
-                    // Print a growth item character for growth items
-                    printw("+");
-                    break;
-                case ELEMENT_KIND::POISON_ITEM:
-                    // Print a poison item character for poison items
-                    printw("-");
-                    break;
-                default:
-                    break;
-            }
-        }
-        printw("\n");
-    }
-    refresh();
-}
-
-void SnakeGame::update() {
-    // 게임이 종료되었는지 확인합니다.
-    if (snake.size() == (MAP_SIZE - 2) * (MAP_SIZE - 2)) {
-        // 뱀이 맵을 모두 채우면 플레이어 승리입니다.
-        setGameStatus(GAME_STATUS::WIN);
-        return;
-    }
-
-    // 현재 뱀 머리의 위치를 가져옵니다.
-    pos currentHead = snake.back();
-
-    // 현재 방향에 따라 뱀 머리의 새 위치를 계산합니다.
-    int newHeadY = currentHead.Y + dPos[snake_direction][0];
-    int newHeadX = currentHead.X + dPos[snake_direction][1];
-
-    // 새 위치가 유효한지 확인합니다.
-    if (newHeadY >= 1 && newHeadY < MAP_SIZE - 1 && newHeadX >= 1 && newHeadX < MAP_SIZE - 1) {
-        int& newHeadElement = map[newHeadY][newHeadX];
-
-        // 뱀이 벽이나 자신에게 충돌하는지 확인합니다.
-        if (newHeadElement == ELEMENT_KIND::WALL || newHeadElement == ELEMENT_KIND::SNAKE_BODY) {
-            setGameStatus(GAME_STATUS::LOSE);
-            return;
-        }
-
-        // 뱀이 성장 아이템이나 독 아이템에 충돌하는지 확인합니다.
-        if (newHeadElement == ELEMENT_KIND::GROWTH_ITEM || newHeadElement == ELEMENT_KIND::POISON_ITEM) {
-            // 아이템의 효과를 처리합니다.
-            handleItem({newHeadY, newHeadX}, newHeadElement);
-            newHeadElement = ELEMENT_KIND::SNAKE_HEAD;
-        }
-        else {
-            // 뱀 머리를 새 위치로 이동시킵니다.
-            newHeadElement = ELEMENT_KIND::SNAKE_HEAD;
-
-            // 뱀 꼬리를 제거합니다.
-            map[snake.front().Y][snake.front().X] = ELEMENT_KIND::BOARD;
-            snake.pop_front();
-        }
-
-        // 뱀에 새 머리를 추가합니다.
-        snake.push_back({newHeadY, newHeadX});
-        
-        // 뱀이 포탈에 충돌하는지 확인합니다.
-        if (newHeadElement == ELEMENT_KIND::PORTAL) {
-            // 새로운 유효한 포탈 위치를 찾습니다.
-            pos portalPosition = findValidPortalPosition(map);
-            map[portalPosition.Y][portalPosition.X] = ELEMENT_KIND::PORTAL;
-        }
-        
-        // 랜덤하게 아이템을 출현시킵니다.
-        if (newHeadElement == ELEMENT_KIND::BOARD) {
-            // 아이템 출현 여부를 결정합니다.
-            if (rand() % ITEM_APPEAR_PROBABILITY == 0) {
-                // 랜덤하게 아이템 종류를 선택합니다.
-                int itemKind = rand() % 2;
-
-                // 빈 공간 중에서 아이템을 출현시킬 위치를 선택합니다.
-                pos itemPosition = findRandomEmptySpace(map);
-                if (itemPosition.Y != -1 && itemPosition.X != -1) {
-                    map[itemPosition.Y][itemPosition.X] = (itemKind == 0) ? ELEMENT_KIND::GROWTH_ITEM : ELEMENT_KIND::POISON_ITEM;
-                }
-            }
-        }
-    }
-    else {
-        
-        setGameStatus(GAME_STATUS::LOSE);
-        return;
-    }
-}
 
 pos SnakeGame::findRandomEmptySpace(int map[MAP_SIZE][MAP_SIZE]) {
     pos emptySpace = {-1, -1};
@@ -282,16 +233,6 @@ void SnakeGame::play() {
         // Delay to control the game speed
         napms(TIMEOUT);
     }
-
-    // Clean up ncurses
-    endwin();
-
-    // Print game over message
-    printGameOver();
-}
-
-void printGameOver() {
-    cout << "Game Over!" << endl;
 }
 
 int main() {
@@ -302,3 +243,4 @@ int main() {
 
     return 0;
 }
+
