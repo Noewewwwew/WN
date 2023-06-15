@@ -22,7 +22,8 @@ SnakeGame::SnakeGame() {
     this->map[MAP_SIZE - 1][0] = this->map[MAP_SIZE - 1][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
     // map 외곽 초기화(WALL)
     for(int i = 1; i < MAP_SIZE - 1; i++){
-        this->map[0][i] = this->map[i][0] = this->map[MAP_SIZE - 1][i] = this->map[i][MAP_SIZE - 1] = ELEMENT_KIND::WALL;
+        this->map[0][i] = this->map[i][0] = this->map[MAP_SIZE - 1][i] = this->map[i][MAP_SIZE - 1] 
+        = ELEMENT_KIND::WALL;
     }
 }
 
@@ -78,7 +79,7 @@ void SnakeGame::draw() {
                     break;}
         }
     refresh();
-}
+ }
 }
 
 void SnakeGame::update(){
@@ -104,6 +105,7 @@ void SnakeGame::update(){
         this->snake.pop_back();
         break;
     }
+
     case ELEMENT_KIND::GROWTH_ITEM:
     case ELEMENT_KIND::POISON_ITEM:
         break;
@@ -187,52 +189,6 @@ pos SnakeGame::findRandomEmptySpace(int map[MAP_SIZE][MAP_SIZE]) {
     }
 
     return emptySpace;
-}
-
-void SnakeGame::play() {
-    // Set up ncurses
-    initscr();
-    cbreak();
-    noecho();
-    nodelay(stdscr, true);
-    keypad(stdscr, true);
-
-    // Main game loop
-    while (isGaming()) {
-        // Draw the current state of the game
-        draw();
-
-        // Wait for user input
-        int ch = getch();
-
-        // Process user input
-        switch (ch) {
-            case KEY_LEFT:
-                setDirection(SNAKE_HEAD_DIRECTION::LEFT);
-                break;
-            case KEY_UP:
-                setDirection(SNAKE_HEAD_DIRECTION::UP);
-                break;
-            case KEY_RIGHT:
-                setDirection(SNAKE_HEAD_DIRECTION::RIGHT);
-                break;
-            case KEY_DOWN:
-                setDirection(SNAKE_HEAD_DIRECTION::DOWN);
-                break;
-            case 'q':
-            case 'Q':
-                setGameStatus(GAME_STATUS::LOSE);
-                break;
-            default:
-                break;
-        }
-
-        // Update the game state
-        update();
-
-        // Delay to control the game speed
-        napms(TIMEOUT);
-    }
 }
 
 int main() {
