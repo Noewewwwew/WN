@@ -43,8 +43,9 @@ void SnakeGame::init() {
     init_pair(ELEMENT_KIND::WALL + 1, COLOR_CYAN, COLOR_CYAN);
     init_pair(ELEMENT_KIND::SNAKE_HEAD + 1, COLOR_GREEN, COLOR_GREEN);
     init_pair(ELEMENT_KIND::SNAKE_BODY + 1, COLOR_YELLOW, COLOR_YELLOW);
+    init_pair(ELEMENT_KIND::POISON_ITEM, COLOR_RED, COLOR_RED);
+    init_pair(ELEMENT_KIND::GROWTH_ITEM, COLOR_DARKBLUE, COLOR_DARKBLUE);
     
-    // 화면에 그리기
     this->draw();
 
     createItems();
