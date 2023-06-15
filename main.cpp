@@ -28,10 +28,10 @@ int main() {
     
     // 올바른 입력이 아니면 재대기 하는 느낌으로다가 만들어야 함
     // 300ms 마다 화면은 업데이트 되어야 함
-    
-    time_point start = getTime();
+    time_point start = getTime(), portalTime = getTime();
     time_point stttt = geteeime();
-    while(!game->isLose()){
+    
+    while(game->isGaming()){
         switch (getch()){
         case 'w':
             game->setDirection(SNAKE_HEAD_DIRECTION::UP);
@@ -52,7 +52,12 @@ int main() {
         default: break;
         }
 
-        if(milliInterval(start) >= TIMEOUT){
+        if(!game->wall.isUsed() && milliInterval(portalTime) >= PORTAL_DURATION){
+            game->changePortal();
+            portalTime = getTime();
+        }
+        
+        if(milliInterval(start) >= UPDATE_DURATION){
             game->update();
             start = getTime();
         }
