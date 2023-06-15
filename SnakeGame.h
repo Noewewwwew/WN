@@ -1,9 +1,12 @@
+#pragma once
+
+//item appear percentage
+const int ITEM_APPEAR_PROBABILITY = 30;  
 #include <deque>
 #include <iostream>
-using namespace std;
 
-// 맵 사이즈
-#define MAP_SIZE 21
+//map size
+#define MAP_SIZE 31
 
 // 타임아웃 시간
 #define TIMEOUT 300
@@ -31,7 +34,7 @@ namespace ELEMENT_KIND {
     const int POISON_ITEM = 7;
 };
 
-// SNAKE 머리 방향
+// SNAKE 
 namespace SNAKE_HEAD_DIRECTION {
     const int LEFT = 0;
     const int UP = 1;
@@ -50,6 +53,9 @@ const int dPos[4][2] = {
 };
 
 class SnakeGame {
+    private:
+    static const int NUM_ITEMS = 10;  //
+    
     // 맵 데이터
     int map[MAP_SIZE][MAP_SIZE];
 
@@ -57,10 +63,12 @@ class SnakeGame {
     int gameStatus = GAME_STATUS::GAMING;
 
     // snake
-    deque<pos> snake;
+    std::deque<pos> snake;
 
-    // 뱀 머리 방향
     int snake_direction = SNAKE_HEAD_DIRECTION::LEFT;
+
+    // Function to find a random empty space on the map
+    pos findRandomEmptySpace(int map[MAP_SIZE][MAP_SIZE]);
 
 public:
     // 생성자
@@ -98,4 +106,22 @@ public:
         if(_pos.Y < 0 || _pos.Y >= MAP_SIZE || _pos.X < 0 || _pos.X >= MAP_SIZE) throw;
         return this->map[_pos.Y][_pos.X];
     }
+
+    // item arange
+    void createItems();
+    void removeExpiredItems();
+    void handleItem(const pos& position, int element);
+    int getItem(const pos& position);
+
+    // game loop
+    void play();
 };
+
+// 맵 생성
+void generateMap(int map[MAP_SIZE][MAP_SIZE]);
+
+// end of the game
+void printGameOver();
+
+// approval item
+pos findValidPortalPosition(int map[MAP_SIZE][MAP_SIZE]);
