@@ -17,7 +17,9 @@ const int ITEM_APPEAR_PROBABILITY = 30;
 
 // 타임아웃 시간
 #define UPDATE_DURATION 300
-#define PORTAL_DURATION 5000
+
+// 벽 갱신 시간: 15초
+#define PORTAL_DURATION 15000
 
 // pair를 사용할 때 first는 Y, second는 X
 #define Y first
@@ -51,12 +53,12 @@ class SnakeGame {
 
     // 게임 상태는 게임 중
     int gameStatus = GAME_STATUS::GAMING;
-
+  
     static const int NUM_ITEMS = 10;
   
     // Function to find a random empty space on the map
     pos findRandomEmptySpace(int map[MAP_SIZE][MAP_SIZE]);
-  
+
     Snake snake;
 
 public:
