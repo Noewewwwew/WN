@@ -48,4 +48,6 @@ public:
     void grow(const pos new_pos);
 
     void shrink();
+
+    void reverse();
 };

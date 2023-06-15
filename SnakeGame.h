@@ -48,7 +48,7 @@ namespace ELEMENT_KIND {
     const int SNAKE_BODY = 5;
     const int GROWTH_ITEM = 6;
     const int POISON_ITEM = 7;
-    const int SCOREBOARD = 8;
+    const int REVERSE_ITEM = 8;
 };
 
 struct MissionCnt {

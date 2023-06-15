@@ -32,7 +32,6 @@ void SnakeGame::init() {
     // 그런데, pair는 1부터 시작할 수 있기 때문에 + 1해서 증가
     // 이제 굳이 board 전체를 순회해서 1로 만들어줄 필요는 없기 때문
     init_pair(ELEMENT_KIND::BOARD + 1, COLOR_WHITE, COLOR_WHITE);
-    init_pair(ELEMENT_KIND::SCOREBOARD + 1, COLOR_MAGENTA, COLOR_MAGENTA);
     
     init_pair(ELEMENT_KIND::IMMU_WALL + 1, COLOR_BLUE, COLOR_BLUE);
     init_pair(ELEMENT_KIND::WALL + 1, COLOR_CYAN, COLOR_CYAN);
@@ -44,6 +43,7 @@ void SnakeGame::init() {
 
     init_pair(ELEMENT_KIND::GROWTH_ITEM + 1, COLOR_GREEN, COLOR_GREEN);
     init_pair(ELEMENT_KIND::POISON_ITEM + 1, COLOR_RED, COLOR_RED);
+    init_pair(ELEMENT_KIND::REVERSE_ITEM + 1, COLOR_BLACK, COLOR_BLACK);
 
     init_pair(10, COLOR_RED, COLOR_WHITE);
     
@@ -253,6 +253,17 @@ void SnakeGame::update(){
         if(snake.get_snake_length() < 3) this->setGameStatus(GAME_STATUS::LOSE); 
         break;
 
+    case ELEMENT_KIND::REVERSE_ITEM:
+        this->setElement(this->snake.new_head(), ELEMENT_KIND::BOARD);
+
+        this->changeNoticeMessage("Snake Reversed!");
+        this->setElement(this->snake.tail(), ELEMENT_KIND::SNAKE_HEAD);
+        this->setElement(this->snake.head(), ELEMENT_KIND::SNAKE_BODY);
+        this->snake.set_head_direction((this->snake.get_head_direction() + 2) % 4);
+        this->snake.reverse();
+
+        break;
+
     case ELEMENT_KIND::PORTAL:{
         this->changeNoticeMessage("             Teleport!              ");
         this->totalCnt.gate += 1; 
@@ -300,6 +311,7 @@ void SnakeGame::update(){
 }
 
 void SnakeGame::createItems() {
+    srand(time(NULL));
     // random 공간에 아이템 지정하기 (growth, poison)
     for (int i = 0; i < NUM_ITEMS; i++) {
         pos itemPosition;
@@ -309,7 +321,8 @@ void SnakeGame::createItems() {
         } while (itemPosition.X == -1 || itemPosition.Y == -1); // 빈 공간이 없으면 다시 시도 -> 빈 공간 찾을때 까지 
 
         // 아이템 종류 지정
-        int itemType = (rand() % 2 == 0) ? ELEMENT_KIND::GROWTH_ITEM : ELEMENT_KIND::POISON_ITEM;
+        int rNum = rand() % 3;
+        int itemType = (rNum == 0) ? ELEMENT_KIND::GROWTH_ITEM : (rNum == 1) ? ELEMENT_KIND::POISON_ITEM : ELEMENT_KIND::REVERSE_ITEM;
 
         //아이템 map에 지정
         map[itemPosition.Y][itemPosition.X] = itemType;
@@ -320,7 +333,7 @@ void SnakeGame::removeExpiredItems() {
     // 시간이 만료된 아이템 지우기
     for (int i = 1; i < MAP_SIZE - 1; i++) {
         for (int j = 1; j < MAP_SIZE - 1; j++) {
-            if (this->map[i][j] == ELEMENT_KIND::GROWTH_ITEM || map[i][j] == ELEMENT_KIND::POISON_ITEM) {
+            if (this->map[i][j] >= ELEMENT_KIND::GROWTH_ITEM) {
                 this->map[i][j] = ELEMENT_KIND::BOARD;
             }
         }
