@@ -49,7 +49,7 @@ void SnakeGame::init() {
     init_pair(10, COLOR_RED, COLOR_WHITE);
     
     this->scoreBoard = newwin(12, 20, 5, 72);
-    this->missionBoard = newwin(12, 20, 17, 72);
+    this->missionBoard = newwin(9, 20, 17, 72);
     this->gameBoard = newwin(31, 62, 5, 10);
     this->noticeText = newwin(1, 70, 3, 15);
 }
@@ -94,15 +94,14 @@ void SnakeGame::draw(const string& msg, bool clear) {
         mvwprintw(this->scoreBoard, 1, 7, "Score");
         mvwprintw(this->missionBoard, 1, 7, "Mission");
 
-        mvwprintw(this->scoreBoard, 3, 5, " B : %d / %d", this->snake.get_snake_length(), this->totalCnt.maxSnakeLength);
-        mvwprintw(this->scoreBoard, 5, 5, "GI : %d", this->totalCnt.growthItem);
-        mvwprintw(this->scoreBoard, 7, 5, "PI : %d", this->totalCnt.poisonItem);
+        mvwprintw(this->scoreBoard, 3, 5, "HP : %d", this->mission[this->currStage - 1].poisonItem - currCnt.poisonItem);
+        mvwprintw(this->scoreBoard, 5, 5, " B : %d / %d", this->snake.get_snake_length(), this->totalCnt.maxSnakeLength);
+        mvwprintw(this->scoreBoard, 7, 5, "GI : %d", this->totalCnt.growthItem);
         mvwprintw(this->scoreBoard, 9, 5, " G : %d", this->totalCnt.gate);
 
         mvwprintw(this->missionBoard, 3, 5, " B : %d / %d", this->snake.get_snake_length(), this->mission[this->currStage - 1].maxSnakeLength);
         mvwprintw(this->missionBoard, 5, 5, "GI : %d / %d", this->currCnt.growthItem, this->mission[this->currStage - 1].growthItem);
-        mvwprintw(this->missionBoard, 7, 5, "PI : %d / %d", this->currCnt.poisonItem, this->mission[this->currStage - 1].poisonItem);
-        mvwprintw(this->missionBoard, 9, 5, " G : %d / %d", this->currCnt.gate, this->mission[this->currStage - 1].gate);
+        mvwprintw(this->missionBoard, 7, 5, " G : %d / %d", this->currCnt.gate, this->mission[this->currStage - 1].gate);
     }
 
     wrefresh(this->scoreBoard);
@@ -122,18 +121,17 @@ void SnakeGame::changePortal() {
 }
 
 void SnakeGame::changeMap(){
-     // 게임 상태 업데이트 작업
-     // 미션 달성 체크 및 스테이지 변경 로직 구현
-     // 스테이지 넘어가는 로직
-     currStage++;
-     SnakeGame::mapUpate(); // 맵 업데이트 호출
-     // 다음 스테이지 초기화 작업 등을 수행
+    // 게임 상태 업데이트 작업
+    // 미션 달성 체크 및 스테이지 변경 로직 구현
+    // 스테이지 넘어가는 로직
+    currStage++;
+    SnakeGame::mapUpate(); // 맵 업데이트 호출
+    // 다음 스테이지 초기화 작업 등을 수행
 }
 
 bool SnakeGame::isMissionClear(){
     bool ret = this->snake.get_snake_length() >= this->mission[this->currStage - 1].maxSnakeLength;
     ret &= this->currCnt.growthItem >= this->mission[this->currStage - 1].growthItem;
-    ret &= this->currCnt.poisonItem >= this->mission[this->currStage - 1].poisonItem;
     ret &= this->currCnt.gate >= this->mission[this->currStage - 1].gate;
     
     return ret;
@@ -255,7 +253,13 @@ void SnakeGame::update(){
     case ELEMENT_KIND::POISON_ITEM:
         this->changeNoticeMessage("Eat Poison Item..., Snake Length - 1");
         this->totalCnt.poisonItem += 1; 
-        this->currCnt.poisonItem += 1; 
+        this->currCnt.poisonItem += 1;
+
+        if(this->mission[currStage - 1].poisonItem == this->currCnt.poisonItem) {
+            this->setGameStatus(GAME_STATUS::LOSE);
+            return;
+        }
+
         this->setElement(this->snake.head(), ELEMENT_KIND::SNAKE_BODY);
         
         // 현재 꼬리는 ELEMENT_KIND::BOARD로 변경하고, 
@@ -325,7 +329,7 @@ void SnakeGame::update(){
         break;
     }
 
-    draw();
+    this->draw();
 }
 
 void SnakeGame::createItems() {

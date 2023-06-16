@@ -4,7 +4,6 @@
 
 #include "SnakeGame.h"
 
-
 using namespace std;
 using namespace std::chrono;
 
@@ -45,8 +44,10 @@ int main() {
                 flag = true;
                 changeTime = getTime();
                 game->changeNoticeMessage("");
+                game->setDirection(SNAKE_HEAD_DIRECTION::LEFT);
             }
             
+            getch();
             auto calcTime = milliInterval(changeTime);
             if(calcTime < 3000){
                 char msg[50];
@@ -66,26 +67,26 @@ int main() {
             }
 
             continue;
-        }
-
+        } 
+        
         switch (getch()){
-        case 'w':
-            game->setDirection(SNAKE_HEAD_DIRECTION::UP);
-            break;
-        
-        case 'a':
-            game->setDirection(SNAKE_HEAD_DIRECTION::LEFT);
-            break;
-        
-        case 's':
-            game->setDirection(SNAKE_HEAD_DIRECTION::DOWN);
-            break;
-        
-        case 'd':
-            game->setDirection(SNAKE_HEAD_DIRECTION::RIGHT);
-            break;
+            case 'w':
+                game->setDirection(SNAKE_HEAD_DIRECTION::UP);
+                break;
+            
+            case 'a':
+                game->setDirection(SNAKE_HEAD_DIRECTION::LEFT);
+                break;
+            
+            case 's':
+                game->setDirection(SNAKE_HEAD_DIRECTION::DOWN);
+                break;
+            
+            case 'd':
+                game->setDirection(SNAKE_HEAD_DIRECTION::RIGHT);
+                break;
 
-        default: break;
+            default: break;
         }
 
         if(!game->wall.isUsed() && milliInterval(portalTime) >= PORTAL_DURATION){
