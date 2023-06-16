@@ -1,6 +1,7 @@
 #include <ncurses/ncurses.h>
 #include <iostream>
 #include <memory.h>
+#include <string>
 
 #include "SnakeGame.h"
 
@@ -11,8 +12,8 @@ using namespace std;
 SnakeGame::SnakeGame(): snake(1, MAP_SIZE / 2), wall(MAP_SIZE, 1) {
     // 시작 상태 초기화(스테이지, 아이템)
     currStage = 1;
-    totalCnt = MissionCnt();
-    currCnt = MissionCnt();
+    totalCnt = MissionCnt(snake.get_snake_length());
+    currCnt = MissionCnt(snake.get_snake_length());
 
     mapUpate();
 }
@@ -51,43 +52,59 @@ void SnakeGame::init() {
     this->missionBoard = newwin(12, 20, 17, 72);
     this->gameBoard = newwin(31, 62, 5, 10);
     this->noticeText = newwin(1, 70, 3, 15);
-    mvwprintw(this->noticeText, 0, 29, "Game Start!");
-
-    // 화면에 그리기
-    this->draw();
 }
 
-void SnakeGame::draw() {
-    // 반각문자를 출력하기 때문에
-    // 가로의 좌표를 출력할 때는 2칸씩 건너뛰어야 함
-    for(int i = 0; i < MAP_SIZE; i++){
-        for(int j = 0; j < MAP_SIZE * 2; j += 2){
-            // 2칸씩 좌표를 건너뛰지만, map의 길이는 MAP_SIZE 만큼이기 때문에
-            // j / 2 를 해서 올바른 접근을 하게 함
-            wattr_on(this->gameBoard, COLOR_PAIR(this->map[i][j / 2] + 1), NULL);
-
-            // 반각문자이기 때문에 공백 2칸 출력
-            mvwprintw(this->gameBoard, i, j, DEBUG ? "a " : "  ");
+void SnakeGame::draw(const string& msg, bool clear) {    
+    for(int i = 0; i < 100 && clear; i++){
+        for(int j = 0; j < 130; j++){
+            mvprintw(i, j, " ");
         }
     }
 
-    box(this->scoreBoard, 0, 0);
-    box(this->missionBoard, 0, 0);
-    
-    mvwprintw(this->scoreBoard, 1, 7, "Score");
-    mvwprintw(this->missionBoard, 1, 7, "Mission");
+    if(msg.compare("") != 0){
+        wattr_on(this->gameBoard, COLOR_PAIR(10), NULL);
 
-    mvwprintw(this->scoreBoard, 3, 5, " B : %d / %d", this->snake.get_snake_length(), this->totalCnt.maxSnakeLength);
-    mvwprintw(this->scoreBoard, 5, 5, "GI : %d", this->totalCnt.growthItem);
-    mvwprintw(this->scoreBoard, 7, 5, "PI : %d", this->totalCnt.poisonItem);
-    mvwprintw(this->scoreBoard, 9, 5, " G : %d", this->totalCnt.gate);
+        if(msg.find("change") == string::npos){
+            mvprintw(10, 0, msg.c_str());
+            mvprintw(20, 50, "Press Any Key");
+            refresh();
+        } else {
+            wattr_on(this->gameBoard, COLOR_PAIR(10), NULL);
+            mvwprintw(this->gameBoard, 13, 24, "Mission Clear!");
+            mvwprintw(this->gameBoard, 15, 10, msg.c_str());
+            wrefresh(this->gameBoard);
+        }
+    } else {
+        // 반각문자를 출력하기 때문에
+        // 가로의 좌표를 출력할 때는 2칸씩 건너뛰어야 함
+        for(int i = 0; i < MAP_SIZE; i++){
+            for(int j = 0; j < MAP_SIZE * 2; j += 2){
+                // 2칸씩 좌표를 건너뛰지만, map의 길이는 MAP_SIZE 만큼이기 때문에
+                // j / 2 를 해서 올바른 접근을 하게 함
+                wattr_on(this->gameBoard, COLOR_PAIR(this->map[i][j / 2] + 1), NULL);
 
-    mvwprintw(this->missionBoard, 3, 5, " B : %d / %d", this->snake.get_snake_length(), this->mission[this->currStage - 1].maxSnakeLength);
-    mvwprintw(this->missionBoard, 5, 5, "GI : %d / %d", this->currCnt.growthItem, this->mission[this->currStage - 1].growthItem);
-    mvwprintw(this->missionBoard, 7, 5, "PI : %d / 0", -this->mission[this->currStage - 1].poisonItem + this->currCnt.poisonItem);
-    mvwprintw(this->missionBoard, 9, 5, " G : %d / %d", this->currCnt.gate, this->mission[this->currStage - 1].gate);
-    
-    wrefresh(this->noticeText);
+                // 반각문자이기 때문에 공백 2칸 출력
+                mvwprintw(this->gameBoard, i, j, DEBUG ? "a " : "  ");
+            }
+        }
+
+        box(this->scoreBoard, 0, 0);
+        box(this->missionBoard, 0, 0);
+        
+        mvwprintw(this->scoreBoard, 1, 7, "Score");
+        mvwprintw(this->missionBoard, 1, 7, "Mission");
+
+        mvwprintw(this->scoreBoard, 3, 5, " B : %d / %d", this->snake.get_snake_length(), this->totalCnt.maxSnakeLength);
+        mvwprintw(this->scoreBoard, 5, 5, "GI : %d", this->totalCnt.growthItem);
+        mvwprintw(this->scoreBoard, 7, 5, "PI : %d", this->totalCnt.poisonItem);
+        mvwprintw(this->scoreBoard, 9, 5, " G : %d", this->totalCnt.gate);
+
+        mvwprintw(this->missionBoard, 3, 5, " B : %d / %d", this->snake.get_snake_length(), this->mission[this->currStage - 1].maxSnakeLength);
+        mvwprintw(this->missionBoard, 5, 5, "GI : %d / %d", this->currCnt.growthItem, this->mission[this->currStage - 1].growthItem);
+        mvwprintw(this->missionBoard, 7, 5, "PI : %d / %d", this->currCnt.poisonItem, this->mission[this->currStage - 1].poisonItem);
+        mvwprintw(this->missionBoard, 9, 5, " G : %d / %d", this->currCnt.gate, this->mission[this->currStage - 1].gate);
+    }
+
     wrefresh(this->scoreBoard);
     wrefresh(this->missionBoard);
 
@@ -116,7 +133,7 @@ void SnakeGame::changeMap(){
 bool SnakeGame::isMissionClear(){
     bool ret = this->snake.get_snake_length() >= this->mission[this->currStage - 1].maxSnakeLength;
     ret &= this->currCnt.growthItem >= this->mission[this->currStage - 1].growthItem;
-    ret &= this->currCnt.poisonItem <= this->mission[this->currStage - 1].poisonItem;
+    ret &= this->currCnt.poisonItem >= this->mission[this->currStage - 1].poisonItem;
     ret &= this->currCnt.gate >= this->mission[this->currStage - 1].gate;
     
     return ret;
@@ -125,6 +142,7 @@ bool SnakeGame::isMissionClear(){
 void SnakeGame::changeNoticeMessage(const char* msg){
     mvwprintw(this->noticeText, 0, 0, "                                                                      ");
     mvwprintw(this->noticeText, 0, 17, msg);
+    wrefresh(this->noticeText);
 }
 
 void SnakeGame::mapUpate(){

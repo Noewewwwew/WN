@@ -65,8 +65,6 @@ struct MissionCnt {
 class SnakeGame {
     // 맵 데이터
     int map[MAP_SIZE][MAP_SIZE];
-    
-    int board[BOARD_SIZE][BOARD_SIZE];
 
     // 게임 상태는 게임 중
     int gameStatus = GAME_STATUS::GAMING;
@@ -95,11 +93,11 @@ public:
     int currStage;
 
     const MissionCnt mission[5] = {
-        MissionCnt(6, 2, 4, 1),
-        MissionCnt(7, 3, 3, 2),
-        MissionCnt(8, 4, 2, 3),
-        MissionCnt(9, 5, 1, 4),
-        MissionCnt(10, 6, 0, 5),
+        MissionCnt(6, 2, 1, 1),
+        MissionCnt(7, 3, 2, 2),
+        MissionCnt(8, 4, 3, 3),
+        MissionCnt(9, 5, 4, 4),
+        MissionCnt(10, 6, 5, 5),
     };
     
     int getGameStatus() { return this->gameStatus; }
@@ -118,7 +116,7 @@ public:
     void init();
 
     // 화면에 그리기
-    void draw();
+    void draw(const string& msg="", bool clear = false);
 
     // 뱀 움직임(2단계) / 아이템 등장(3단계) / 포탈 등장(4단계) 등등 연산
     void update();
