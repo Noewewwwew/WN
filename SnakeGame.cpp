@@ -94,7 +94,7 @@ void SnakeGame::draw(const string& msg, bool clear) {
         mvwprintw(this->scoreBoard, 1, 7, "Score");
         mvwprintw(this->missionBoard, 1, 7, "Mission");
 
-        mvwprintw(this->scoreBoard, 3, 5, "HP : %d", this->mission[this->currStage - 1].poisonItem - totalCnt.poisonItem);
+        mvwprintw(this->scoreBoard, 3, 5, "HP : %d", this->mission[this->currStage - 1].poisonItem - currCnt.poisonItem);
         mvwprintw(this->scoreBoard, 5, 5, " B : %d / %d", this->snake.get_snake_length(), this->totalCnt.maxSnakeLength);
         mvwprintw(this->scoreBoard, 7, 5, "GI : %d", this->totalCnt.growthItem);
         mvwprintw(this->scoreBoard, 9, 5, " G : %d", this->totalCnt.gate);
@@ -253,7 +253,13 @@ void SnakeGame::update(){
     case ELEMENT_KIND::POISON_ITEM:
         this->changeNoticeMessage("Eat Poison Item..., Snake Length - 1");
         this->totalCnt.poisonItem += 1; 
-        this->currCnt.poisonItem += 1; 
+        this->currCnt.poisonItem += 1;
+
+        if(this->mission[currStage - 1].poisonItem == this->currCnt.poisonItem) {
+            this->setGameStatus(GAME_STATUS::LOSE);
+            return;
+        }
+
         this->setElement(this->snake.head(), ELEMENT_KIND::SNAKE_BODY);
         
         // 현재 꼬리는 ELEMENT_KIND::BOARD로 변경하고, 
