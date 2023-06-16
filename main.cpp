@@ -26,21 +26,32 @@ int main() {
     time_point changeTime = getTime();
     bool flag = false;
 
+    while(getch() == ERR){
+ string title  = "\toooooo  oo    oo      oooo      oo   oo  oooooo    oooooooo      oooo      oo       oo  oooooo \n";
+        title += "\too      oooo  oo     oo  oo     oo  oo   oo        oo           oo  oo     oooo   oooo  oo     \n";
+        title += "\toooooo  oo oo oo    oooooooo    ooooo    oooooo    oo  oooo    oooooooo    oo oo oo oo  oooooo \n";
+        title += "\t    oo  oo  oooo   oo      oo   oo  oo   oo        oo    oo   oo      oo   oo   oo  oo  oo     \n";
+        title += "\toooooo  oo   ooo  oo        oo  oo   oo  oooooo    oooooooo  oo        oo  oo       oo  oooooo \n";
+
+        game->draw(title);
+    }
+
     game->createItems();
-    game->draw();
+    game->draw("", true);
 
     while(game->isGaming()){
         if(!game->wall.isUsed() && game->isMissionClear()){
             if(!flag) {
                 flag = true;
                 changeTime = getTime();
+                game->changeNoticeMessage("");
             }
             
             auto calcTime = milliInterval(changeTime);
             if(calcTime < 3000){
                 char msg[50];
                 snprintf(msg, sizeof(msg), "change %d stage to %d stage after %lld sec...", game->currStage, game->currStage + 1, 3LL - (calcTime / 1000));
-                game->changeNoticeMessage(msg);
+                game->draw(msg);
             } else {
                 flag = false;
                 startTime = portalTime = itemTime = getTime();
@@ -53,6 +64,8 @@ int main() {
 
                 game->update();
             }
+
+            continue;
         }
 
         switch (getch()){
@@ -92,8 +105,25 @@ int main() {
         }
     }
 
-    if(game->isLose()) cout << "You Lose";
-    else cout << "You Win";
+    while(game->isLose() && getch() == ERR){
+ string title  = "\too      oo oooooooo  oo    oo    oo       oooooooo  oooooo  oooooo \n";
+        title += "\t oo    oo  oo    oo  oo    oo    oo       oo    oo  oo      oo     \n";
+        title += "\t  oooooo   oo    oo  oo    oo    oo       oo    oo  oooooo  oooooo \n";
+        title += "\t    oo     oo    0o  oo    oo    oo       oo    oo      oo  oo     \n";
+        title += "\t    oo     oooooooo  oooooooo    oooooooo oooooooo  oooooo  oooooo \n";
+
+        game->draw(title, true);
+    }
+
+    while(game->isWin() && getch() == ERR){
+ string title  = "\too      oo oooooooo  oo    oo    oo     oo     oo oooooo  oo    oo  \n";
+        title += "\t oo    oo  oo    oo  oo    oo    oo    oooo    oo   oo    oooo  oo  \n";
+        title += "\t  oooooo   oo    oo  oo    oo     oo  oo  oo  oo    oo    oo oo oo  \n";
+        title += "\t    oo     oo    0o  oo    oo     oo  oo  oo  oo    oo    oo  oooo  \n";
+        title += "\t    oo     oooooooo  oooooooo      oooo    oooo   oooooo  oo   ooo \n";
+
+        game->draw(title, true);
+    }
     
     endwin();
     return 0;
