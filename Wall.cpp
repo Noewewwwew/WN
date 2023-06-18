@@ -15,28 +15,44 @@ Wall::Wall(int map_size, int stage): remain_length(0) {
                 this->wall.push_back(pos(row, map_size - col - 1));
         }
     }
+
+    srand(time(NULL));
+    int rnd1 = rand() % this->wall.size(), rnd2;
+    for(rnd2 = rnd1; rnd1 == rnd2; rnd2 = rand() % this->wall.size());
+    nextGate1 = this->wall[rnd1];
+    nextGate2 = this->wall[rnd2];
 }
 
 const vector<pos>& Wall::get_wall_info(){
     return this->wall;
 }
 
-void Wall::initPortal() {
-    srand(time(NULL));
+void Wall::initGate() {
+    srand(time(NULL) + 3);
+
+    nowGate1 = pos(nextGate1);
+    nowGate2 = pos(nextGate2);
 
     int rnd1 = rand() % this->wall.size(), rnd2;
     for(rnd2 = rnd1; rnd1 == rnd2; rnd2 = rand() % this->wall.size());
-
-    portal1 = this->wall[rnd1];
-    portal2 = this->wall[rnd2];
+    nextGate1 = this->wall[rnd1];
+    nextGate2 = this->wall[rnd2];
 }
 
-const pos& Wall::getPortal1() {
-    return this->portal1;
+const pos& Wall::getNowGate1() {
+    return this->nowGate1;
 }
 
-const pos& Wall::getPortal2() {
-    return this->portal2;
+const pos& Wall::getNowGate2() {
+    return this->nowGate2;
+}
+
+const pos& Wall::getNextGate1() {
+    return this->nextGate1;
+}
+
+const pos& Wall::getNextGate2() {
+    return this->nextGate2;
 }
 
 bool Wall::isUsed() {
