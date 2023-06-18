@@ -21,9 +21,9 @@ int main() {
     game->init();
     char c;
     
-    time_point startTime = getTime(), portalTime = getTime(), itemTime = getTime();
-    time_point changeTime = getTime();
-    bool flag = false;
+    time_point updateTime = getTime(), gateTime = getTime(), itemTime = getTime();
+    time_point startTime = getTime(), changeTime = getTime();
+    bool missionFlag = false, gateFlag = true;
 
     while(getch() == ERR){
  string title  = "\toooooo  oo    oo      oooo      oo   oo  oooooo    oooooooo      oooo      oo       oo  oooooo \n";
@@ -40,8 +40,8 @@ int main() {
 
     while(game->isGaming()){
         if(!game->wall.isUsed() && game->isMissionClear()){
-            if(!flag) {
-                flag = true;
+            if(!missionFlag) {
+                missionFlag = true;
                 changeTime = getTime();
                 game->changeNoticeMessage("");
                 game->setDirection(SNAKE_HEAD_DIRECTION::LEFT);
@@ -49,13 +49,13 @@ int main() {
             
             getch();
             auto calcTime = milliInterval(changeTime);
-            if(calcTime < 3000){
+            if(calcTime < 3000LL){
                 char msg[50];
                 snprintf(msg, sizeof(msg), "change %d stage to %d stage after %lld sec...", game->currStage, game->currStage + 1, 3LL - (calcTime / 1000));
                 game->draw(msg);
             } else {
-                flag = false;
-                startTime = portalTime = itemTime = getTime();
+                missionFlag = false;
+                updateTime = gateTime = itemTime = getTime();
                 game->changeMap();
 
                 game->removeExpiredItems();
@@ -63,7 +63,7 @@ int main() {
 
                 game->changeNoticeMessage("start new stage!");
 
-                game->update();
+                game->update(milliInterval(startTime) / 1000LL);
             }
 
             continue;
@@ -89,9 +89,14 @@ int main() {
             default: break;
         }
 
-        if(!game->wall.isUsed() && milliInterval(portalTime) >= PORTAL_DURATION){
-            game->changePortal();
-            portalTime = getTime();
+        if(milliInterval(gateTime) >= GATE_DURATION - NEXT_GATE_DURATION && !game->getNextGateShowFlag()){
+            game->setNextGateShowFlag(true);
+        }
+
+        if(!game->wall.isUsed() && milliInterval(gateTime) >= GATE_DURATION){
+            game->changeGate();
+            gateTime = getTime();
+            game->setNextGateShowFlag(false);
         }
         
         if(milliInterval(itemTime) >= ITEM_DURATION){
@@ -100,9 +105,9 @@ int main() {
             itemTime = getTime();
         }
 
-        if(milliInterval(startTime) >= UPDATE_DURATION){
-            game->update();
-            startTime = getTime();
+        if(milliInterval(updateTime) >= UPDATE_DURATION){
+            game->update(milliInterval(startTime) / 1000LL);
+            updateTime = getTime();
         }
     }
 
