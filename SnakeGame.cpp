@@ -1,8 +1,8 @@
-#include <ncurses/ncurses.h>
 #include <iostream>
 #include <memory.h>
 #include <string>
 
+#include "kmu_curses.h"
 #include "SnakeGame.h"
 
 #define DEBUG false
@@ -57,8 +57,8 @@ void SnakeGame::init() {
 
     init_pair(11, COLOR_RED, COLOR_WHITE);
     
-    this->scoreBoard = newwin(15, 25, 5, 72);
-    this->missionBoard = newwin(9, 25, 17, 72);
+    this->scoreBoard = newwin(15, 25, 5, 75);
+    this->missionBoard = newwin(9, 25, 20, 75);
     this->gameBoard = newwin(31, 62, 5, 10);
     this->noticeText = newwin(1, 70, 3, 15);
 }

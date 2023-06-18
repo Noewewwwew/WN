@@ -1,7 +1,7 @@
 #include <deque>
 #include <iostream>
-#include <ncurses/ncurses.h>
 
+#include "kmu_curses.h"
 #include "Snake.h"
 #include "Wall.h"
 
