@@ -1,7 +1,7 @@
-#include <ncurses/ncurses.h>
 #include <iostream>
 #include <chrono>
 
+#include "kmu_curses.h"
 #include "SnakeGame.h"
 
 using namespace std;
@@ -21,8 +21,8 @@ int main() {
     game->init();
     char c;
     
-    time_point updateTime = getTime(), gateTime = getTime(), itemTime = getTime();
-    time_point startTime = getTime(), changeTime = getTime();
+    auto updateTime = getTime(), gateTime = getTime(), itemTime = getTime();
+    auto startTime = getTime(), changeTime = getTime();
     bool missionFlag = false, gateFlag = true;
 
     while(getch() == ERR){
