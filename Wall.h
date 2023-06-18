@@ -13,7 +13,7 @@ typedef pair<int, int> pos;
 class Wall {
     static int stage[5][31];
     vector<pos> wall;
-    pos portal1, portal2;
+    pos nowGate1, nowGate2, nextGate1, nextGate2;
     int remain_length;
 
 public:
@@ -21,10 +21,13 @@ public:
 
     const vector<pos>& get_wall_info();
 
-    void initPortal();
+    void initGate();
 
-    const pos& getPortal1();
-    const pos& getPortal2();
+    const pos& getNowGate1();
+    const pos& getNowGate2();
+
+    const pos& getNextGate1();
+    const pos& getNextGate2();
 
     bool isUsed();
     void setUsed(int snake_length);
