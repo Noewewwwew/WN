@@ -203,7 +203,7 @@ void SnakeGame::mapUpate(){
             this->map[11][i] = ELEMENT_KIND::IMMU_WALL;
         }
 
-        for(int i = 11; i < 15; i++){
+        for(int i = 11; i < 16; i++){
             this->map[i][9] = ELEMENT_KIND::IMMU_WALL;
         }
 
@@ -380,15 +380,10 @@ void SnakeGame::removeExpiredItems() {
     for (int i = 1; i < MAP_SIZE - 1; i++) {
         for (int j = 1; j < MAP_SIZE - 1; j++) {
             if (this->map[i][j] >= ELEMENT_KIND::GROWTH_ITEM) {
-                this->map[i][j] = ELEMENT_KIND::BOARD;
+                setElement(pos(i, j), ELEMENT_KIND::BOARD);
             }
         }
     }
-}
-
-int SnakeGame::getItem(const pos& position) {
-    //아이템 고정 자리에서 출현
-    return this->map[position.Y][position.X];
 }
 
 pos SnakeGame::findRandomEmptySpace() {
