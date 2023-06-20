@@ -78,7 +78,7 @@ void SnakeGame::draw(const string& msg, bool clear) {
             mvprintw(20, 50, "Press Any Key");
             refresh();
         } else {
-            wattr_on(this->gameBoard, COLOR_PAIR(10), NULL);
+            wattr_on(this->gameBoard, COLOR_PAIR(11), NULL);
             mvwprintw(this->gameBoard, 13, 24, "Mission Clear!");
             mvwprintw(this->gameBoard, 15, 10, msg.c_str());
             wrefresh(this->gameBoard);
