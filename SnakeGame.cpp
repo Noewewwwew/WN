@@ -337,7 +337,9 @@ void SnakeGame::update(int64_t time){
         else {
             int direction = this->snake.get_head_direction();
             do {
-                if(this->getElement(this->snake.new_head()) != ELEMENT_KIND::WALL)
+                if(this->getElement(this->snake.new_head()) != ELEMENT_KIND::WALL 
+                    && this->getElement(this->snake.new_head()) != ELEMENT_KIND::IMMU_WALL
+                    && this->getElement(this->snake.new_head()) != ELEMENT_KIND::NEXT_GATE)
                     break;
                 this->snake.set_head_direction((this->snake.get_head_direction() + 1) % 4);
             } while(direction != this->snake.get_head_direction());
