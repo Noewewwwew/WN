@@ -164,7 +164,7 @@ void SnakeGame::changeNoticeMessage(const char* msg){
 }
 
 void SnakeGame::mapUpate(){
-    if(currStage == 6){
+    if(currStage > 5){
         this->setGameStatus(GAME_STATUS::WIN);
         return;
     }
@@ -264,7 +264,8 @@ void SnakeGame::update(int64_t time){
     case ELEMENT_KIND::GROWTH_ITEM:{
         this->changeNoticeMessage("Eat Growth Item!, Snake Length + 1");
         this->totalCnt.growthItem += 1; 
-        this->currCnt.growthItem += 1; 
+        this->currCnt.growthItem += 1;
+        this->currCnt.poisonItem = (this->currCnt.poisonItem - 1 < 0) ? 0 : (this->currCnt.poisonItem - 1); 
         this->setElement(this->snake.head(), ELEMENT_KIND::SNAKE_BODY);
         this->snake.grow();
         this->setElement(this->snake.head(), ELEMENT_KIND::SNAKE_HEAD);

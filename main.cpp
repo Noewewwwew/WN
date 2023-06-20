@@ -40,6 +40,11 @@ int main() {
 
     while(game->isGaming()){
         if(!game->wall.isUsed() && game->isMissionClear()){
+            if(game->currStage == 5){
+                game->setGameStatus(GAME_STATUS::WIN);
+                break;
+            }
+
             if(!missionFlag) {
                 missionFlag = true;
                 changeTime = getTime();
