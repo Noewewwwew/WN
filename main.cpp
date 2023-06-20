@@ -56,6 +56,7 @@ int main() {
             } else {
                 missionFlag = false;
                 updateTime = gateTime = itemTime = getTime();
+                game->setNextGateShowFlag(false);
                 game->changeMap();
 
                 game->removeExpiredItems();
