@@ -195,6 +195,9 @@ void SnakeGame::mapUpate(){
     this->map[0][0] = this->map[0][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
     this->map[MAP_SIZE - 1][0] = this->map[MAP_SIZE - 1][MAP_SIZE - 1] = ELEMENT_KIND::IMMU_WALL;
     if(currStage == 5){
+        this->map[12][4] = this->map[12][8] = this->map[12][16] = ELEMENT_KIND::IMMU_WALL;
+        this->map[18][14] = this->map[18][22] = this->map[18][26] = ELEMENT_KIND::IMMU_WALL;
+    
         for(int i = 11; i < 20; i++){
             this->map[i][3] = ELEMENT_KIND::IMMU_WALL;
         }
