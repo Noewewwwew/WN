@@ -100,8 +100,8 @@ public:
         MissionCnt(6, 2, 5, 1),
         MissionCnt(7, 3, 4, 2),
         MissionCnt(8, 4, 3, 3),
-        MissionCnt(9, 5, 2, 4),
-        MissionCnt(10, 6, 1, 5),
+        MissionCnt(9, 5, 3, 4),
+        MissionCnt(9, 5, 3, 5),
     };
     
     int getGameStatus() { return this->gameStatus; }
