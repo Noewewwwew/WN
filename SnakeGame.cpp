@@ -262,7 +262,7 @@ void SnakeGame::update(int64_t time){
     }
 
     case ELEMENT_KIND::GROWTH_ITEM:{
-        this->changeNoticeMessage("Eat Growth Item!, Snake Length + 1 ");
+        this->changeNoticeMessage("Eat Growth Item!, Snake Length + 1");
         this->totalCnt.growthItem += 1; 
         this->currCnt.growthItem += 1; 
         this->setElement(this->snake.head(), ELEMENT_KIND::SNAKE_BODY);
@@ -274,7 +274,7 @@ void SnakeGame::update(int64_t time){
     }
 
     case ELEMENT_KIND::POISON_ITEM:{
-        this->changeNoticeMessage("Eat Poison Item..., Snake Length - 1");
+        this->changeNoticeMessage("Eat Poison Item..., HP - 1");
         this->totalCnt.poisonItem += 1; 
         this->currCnt.poisonItem += 1;
 
